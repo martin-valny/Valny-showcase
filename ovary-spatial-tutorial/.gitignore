@@ -1,0 +1,12 @@
+data/*.h5ad
+data/*.gz
+data/raw/
+.Rproj.user
+*.Rhistory
+.Rhistory
+*_cache/
+*_files/
+*.html
+!docs/*.html
+__pycache__/
+.venv/
