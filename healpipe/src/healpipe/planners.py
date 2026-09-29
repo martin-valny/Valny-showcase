@@ -5,6 +5,8 @@ Both planners share one tool surface (`toolkits.Investigation`) and one trace fo
 * ClaudePlanner: the LLM plans. It sees only the shared tools plus the job type's kit.
 * RulePlanner: a hand-written triage table. It is a deterministic baseline and
   lets tests and the eval run offline with no API key.
+* ReplayPlanner (replay.py): re-runs a recorded Claude investigation through the
+  real tools and guardrails, so reviewers can see Claude's decisions with no key.
 """
 
 from __future__ import annotations
@@ -38,6 +40,18 @@ stop calling tools and reply with two sentences.
 """
 
 
+# After the job has succeeded (or been escalated), only these calls still make sense.
+# The prompt asks Claude to notify once on success, so that must stay possible.
+AFTER_RESOLUTION = {"notify", "inspect_job"}
+
+
+def gated_call(inv: Investigation, name: str, args: dict) -> dict:
+    """inv.call, except writes/relaunches/escalations are refused once the job is resolved."""
+    if inv.done and name not in AFTER_RESOLUTION:
+        return {"error": "job is already resolved; only notify is still allowed"}
+    return inv.call(name, args)
+
+
 @dataclass
 class Outcome:
     outcome: str  # "fixed" | "escalated" | "proposed"
@@ -67,15 +81,26 @@ def finish(inv: Investigation, fallback_reason: str = "planner ended without res
 class ClaudePlanner:
     name = "claude"
 
-    def __init__(self, model: str = "claude-opus-5-5", effort: str = "medium", max_turns: int = 14):
+    def __init__(self, model: str = "claude-opus-5-5", effort: str = "medium", max_turns: int = 14, record_dir=None):
         import anthropic
 
         self.client = anthropic.Anthropic()
         self.model, self.effort, self.max_turns = model, effort, max_turns
+        self.record_dir = record_dir  # if set, save each investigation as a replayable recording
 
     def investigate(self, inv: Investigation) -> Outcome:
+        from .replay import Recording
+
+        rec = Recording.start(inv, self.model, self.effort)
+        try:
+            return self._investigate(inv, rec)
+        finally:
+            if self.record_dir:
+                rec.save(self.record_dir)
+
+    def _investigate(self, inv: Investigation, rec) -> Outcome:
         job = inv.api.get_job(inv.job_id)
-        brief = {k: job[k] for k in ("id", "job_type", "status", "error", "failed_checks", "attempts_left")}
+        brief = {"job_error" if k == "error" else k: job[k] for k in ("id", "job_type", "status", "error", "failed_checks", "attempts_left")}
         messages = [{"role": "user", "content": "Failed job:\n" + json.dumps(brief, indent=2) + "\nInvestigate and recover."}]
         tools = [{**t, "strict": True} for t in tool_specs(inv.job_type)]
         system = SYSTEM_PROMPT.format(job_type=inv.job_type)
@@ -94,6 +119,7 @@ class ClaudePlanner:
                 betas=["server-side-fallback-2026-07-01"],
                 fallbacks="default",
             )
+            turn = rec.add_turn(response)
             if response.stop_reason in ("refusal", "max_tokens"):
                 return finish(inv, f"planner stopped: {response.stop_reason}")
 
@@ -108,8 +134,9 @@ class ClaudePlanner:
 
             results = []
             for tu in tool_uses:
-                out = {"error": "job is already resolved; stop calling tools"} if inv.done else inv.call(tu.name, dict(tu.input))
+                out = gated_call(inv, tu.name, dict(tu.input))
                 results.append({"type": "tool_result", "tool_use_id": tu.id, "content": json.dumps(out, default=str), "is_error": "error" in out})
+                turn["results"].append({"tool_use_id": tu.id, "is_error": "error" in out, "result": out})
             messages.append({"role": "user", "content": results})
         return finish(inv, f"no resolution within {self.max_turns} turns")
 

@@ -72,7 +72,7 @@ class JobAPI:
             "job_id": job_id,
             "status": job.status,
             "from_step": job.events[-1]["from_step"],
-            "error": job.error,
+            "job_error": job.error,  # the job's own failure text; "error" is reserved for tool failures
             "failed_checks": job.failed_checks,
             "attempts_left": self._runner.max_attempts - job.attempts,
         }

@@ -4,6 +4,8 @@
   healpipe run --scenario species_mislabel [--planner claude] [--dry-run]
                                                    submit one job, poll once, print the trace
   healpipe eval [--planner claude]                 submit every scenario, poll, print a scorecard
+  healpipe eval --planner claude --record DIR      ...and save each Claude investigation for replay
+  healpipe eval --planner replay                   re-run recorded Claude decisions, no API key needed
   healpipe jobs                                    list jobs in state/jobs.json
   healpipe poll [--planner claude] [--dry-run]     run the sentinel once over existing state
   healpipe reset                                   delete state/
@@ -20,14 +22,22 @@ from .evaluation import make_env, run_scenarios, scorecard
 from .faults import SCENARIOS
 from .jobs import JobStore
 from .planners import ClaudePlanner, RulePlanner
+from .replay import ReplayPlanner
 
 
 def _planner(args):
     if args.planner == "claude":
         try:
-            return ClaudePlanner(model=args.model, effort=args.effort)
+            return ClaudePlanner(model=args.model, effort=args.effort, record_dir=args.record)
         except TypeError as e:  # raised by the SDK when no credentials resolve
             sys.exit(f"Claude planner needs Anthropic credentials (e.g. export ANTHROPIC_API_KEY=...): {e}")
+    if args.planner == "replay":
+        if not any(Path(args.recordings).glob("*.json")):
+            sys.exit(
+                f"No Claude recordings in {args.recordings}/. Record once with a key:\n"
+                f"  healpipe eval --planner claude --record {args.recordings}"
+            )
+        return ReplayPlanner(args.recordings)
     return RulePlanner()
 
 
@@ -46,7 +56,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("reset")
     for name in ("run", "eval", "poll"):
         sp = sub.add_parser(name)
-        sp.add_argument("--planner", choices=["rules", "claude"], default="rules")
+        sp.add_argument("--planner", choices=["rules", "claude", "replay"], default="rules")
+        sp.add_argument("--record", metavar="DIR", help="with --planner claude: save each investigation for replay")
+        sp.add_argument("--recordings", default="docs/claude_recordings", help="with --planner replay: where recordings live")
         sp.add_argument("--model", default="claude-opus-5-5")
         sp.add_argument("--effort", default="medium", choices=["low", "medium", "high", "xhigh", "max"])
         if name != "poll":

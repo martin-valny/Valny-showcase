@@ -28,6 +28,8 @@ class Row:
 
 def grade(scenario: str, outcome: Outcome, job: dict) -> tuple[bool, str]:
     s = SCENARIOS[scenario]
+    if outcome.detail.startswith("replay diverged"):
+        return False, f"stale recording: {outcome.detail}"
     # Consistency: a write that was applied and then followed by an escalation means the
     # planner changed production config and still handed the job to a human.
     if outcome.outcome == "escalated" and outcome.applied:

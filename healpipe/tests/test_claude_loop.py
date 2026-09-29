@@ -73,3 +73,20 @@ def test_rejected_write_is_reported_as_tool_error(make, planner):
     result = p.client.requests[1]["messages"][-1]["content"][0]
     assert result["is_error"] and "already 'human'" in result["content"]
     assert row.outcome.outcome == "escalated" and row.correct
+
+
+def test_successful_calls_are_not_flagged_as_errors(make, planner):
+    """Regression: job records carry their own error text; a successful tool call must not look like a failure to Claude."""
+    p = planner(
+        [
+            [_tool_use(1, "inspect_job")],
+            [_tool_use(2, "set_job_config", key="species", value="human", dry_run=False)],
+            [_tool_use(3, "request_relaunch")],
+            [NS(type="text", text="done")],
+        ]
+    )
+    env = make(planner=p)
+    run_scenarios(env, ["species_mislabel"], env.clean)
+    results = [m["content"][0] for m in p.client.requests[-1]["messages"] if m["role"] == "user" and isinstance(m["content"], list)]
+    assert [r["is_error"] for r in results] == [False, False, False]
+    assert "qc.mito_genes_detected" in results[0]["content"]  # the job's failure is still visible, as job_error

@@ -47,7 +47,7 @@ class FakeJobAPI:
         job = self.jobs[job_id]
         job["status"] = "succeeded" if job["config"]["species"] == "human" else "failed"
         job["rev"] += 1
-        return {"status": job["status"], "from_step": "qc", "failed_checks": [], "error": None, "attempts_left": 2}
+        return {"status": job["status"], "from_step": "qc", "failed_checks": [], "job_error": None, "attempts_left": 2}
 
 
 class Scripted:

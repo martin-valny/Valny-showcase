@@ -87,7 +87,7 @@ class Investigation:
             "id": j["id"],
             "job_type": j["job_type"],
             "status": j["status"],
-            "error": j["error"],
+            "job_error": j["error"],
             "failed_checks": j["failed_checks"],
             "config": j["config"],
             "editable_keys": {k: sorted(AGENT_EDITABLE[k][0]) for k in JOB_TYPE_KEYS[j["job_type"]]},

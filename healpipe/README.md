@@ -94,7 +94,8 @@ healpipe jobs                               # what the runner's job store looks 
 healpipe poll                               # run the sentinel once over existing state
 
 export ANTHROPIC_API_KEY=...
-healpipe eval --planner claude              # same scenarios, LLM planner
+healpipe eval --planner claude --record docs/claude_recordings   # LLM planner; saves each run
+healpipe eval --planner replay              # re-run the recorded Claude decisions, no key needed
 ```
 
 Scorecard with the rules planner on PBMC3k ([docs/eval_rules.md](docs/eval_rules.md)):
@@ -158,6 +159,14 @@ deterministically, so CI runs offline and the LLM has a baseline to beat.
 - `strict: true` schemas. The `set_job_config` key enum is narrowed per job type.
 - Server-side refusal fallbacks are enabled. Message history is append-only.
 - The unit tests use a dummy key and a scripted client. Run `healpipe eval --planner claude` for a live scorecard.
+
+### Reviewing without an API key: record once, replay anywhere
+
+`--record DIR` saves each Claude investigation as one JSON file per scenario. A file holds Claude's text, every tool call with its arguments and rationale, and the result Claude saw back. `--planner replay` feeds those recorded calls back through the **real** runner, JobAPI, per-job-type toolkits and guardrails, and grades the scorecard exactly as for a live run. It is a re-execution, not a transcript printout.
+
+If a live result disagrees with what was recorded (a call that succeeded now fails, or a relaunch ends in a different status), the replay stops at that call. It's graded as a **stale recording**, so a recording can't quietly pass after the code changes. Thinking blocks are not stored.
+
+Recordings live in [`docs/claude_recordings/`](docs/claude_recordings/) once a live run has been made. Until then, `--planner replay` says how to create them.
 
 ## Data
 
