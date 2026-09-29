@@ -66,7 +66,7 @@ Stills from the same kind of run:
 |---|---|---|
 | GET | `/` | static UI |
 | GET | `/api/schema` | form spec (the YAML as JSON) |
-| GET | `/api/data/status` | whether the input exists, size, shape, candidate sample columns |
+| GET | `/api/data/status` | whether the input exists, size, shape, eligible sample columns |
 | POST | `/api/jobs` | `{"params": {...}, "sample_col": null}`: validate and start (422 bad params, 409 no data) |
 | GET | `/api/jobs` | list |
 | GET | `/api/jobs/{id}` | status |
@@ -78,7 +78,7 @@ Stills from the same kind of run:
 
 - **Polling, not SSE, for logs.** The browser asks for bytes after the last offset once a second. It's simple, it survives reconnects, and it needs no extra dependencies.
 - **Matplotlib PNG, not Plotly.** A static image keeps the report a single dependency-free file.
-- **sample_col is optional and only colors the UMAP** and counts cells per group. The data-status endpoint offers categorical obs columns with 2–50 values. PBMC3k has a single sample, so the fetch script keeps the published clusters as `published_cluster` to give this step something to show. If there are no candidates, the step is skipped.
+- **sample_col is optional and only colors the UMAP** and counts cells per group. The data-status endpoint offers categorical obs columns with 2–50 values. PBMC3k has a single sample, so the fetch script keeps the published clusters as `published_cluster` to give this step something to show. If none are eligible, the step is skipped.
 - **Validation lives on the server.** The HTML min/max attributes help the user, but the API is the gate.
 - **No database, no auth.** It binds to `127.0.0.1` by default.
 

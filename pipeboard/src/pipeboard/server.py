@@ -2,7 +2,7 @@
 
     GET    /                       UI
     GET    /api/schema             form spec (schema/pipeline.yaml as JSON)
-    GET    /api/data/status        does the input h5ad exist; size; candidate sample columns
+    GET    /api/data/status        does the input h5ad exist; size; eligible sample columns
     POST   /api/jobs               {"params": {...}, "sample_col": null} -> start a job
     GET    /api/jobs               list
     GET    /api/jobs/{id}          status
