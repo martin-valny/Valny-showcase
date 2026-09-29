@@ -18,3 +18,23 @@ jobs:
       - run: pip install -e ".[dev]"
       # Offline: synthetic fixtures only. No dataset download, no API keys.
       - run: pytest -q
+
+  ovary-spatial-tutorial:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ovary-spatial-tutorial
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repo hygiene (denylist, data path, no committed data)
+        run: bash tests/check_repo.sh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: fetch_data.py compiles
+        run: python -m py_compile scripts/fetch_data.py
+      - uses: r-lib/actions/setup-r@v2
+      - name: Every R chunk parses (no data needed)
+        run: |
+          Rscript -e 'install.packages("knitr", repos = "https://cloud.r-project.org")'
+          Rscript -e 'out <- knitr::purl("ovary_analysis.Rmd", output = tempfile(fileext = ".R"), documentation = 0, quiet = TRUE); invisible(parse(out)); cat("all chunks parse\n")'

@@ -6,3 +6,5 @@ __pycache__/
 .env
 *.egg-info/
 .pytest_cache/
+*.h5ad
+*.h5ad.gz
