@@ -1,142 +1,173 @@
 # healpipe
 
-> **Independent sample built on public data (10x PBMC3k) to illustrate an agent pattern.**
-> It is not derived from, and does not describe, any employer system. Employer work is confidential.
+> Independent sample on public data illustrating an agent pattern. Not derived from any employer system; employer work is confidential.
 
-A single-cell RNA-seq pipeline that watches itself. When a monitor check
-fails, an LLM agent diagnoses the root cause with deterministic tools. It then
-either applies a small allow-listed fix and relaunches, or escalates to a
-human.
-
-Everything runs on **public data** (10x PBMC3k). Faults are **injected on
-purpose** so every failure is reproducible.
+A sentinel agent that watches a batch runner. When a single-cell RNA-seq job
+fails, the sentinel investigates it with tools specific to that job's type.
+Then it either makes a **gated, dry-runnable config write** and asks the runner
+to relaunch, or it **escalates to a human**.
 
 ```
-fail  ->  diagnose  ->  fix  ->  relaunch  ->  pass
-                   \->  escalate (when no safe fix exists)
+runner: job fails  ->  sentinel polls  ->  investigate (job-type toolkit)  ->  set_job_config  ->  runner relaunches  ->  pass
+                                                                           \->  escalate (no safe fix)
 ```
 
-## Quick start
-
-```bash
-pip install -e ".[dev]"
-python scripts/fetch_data.py                 # ~25 MB, writes data/pbmc3k_counts.h5ad
-pytest -q                                    # offline, synthetic data, ~3 s
-
-healpipe scenarios                           # list injected faults
-healpipe run  --scenario species_mislabel    # one scenario, prints the trace
-healpipe eval                                # all scenarios, prints a scorecard
-
-export ANTHROPIC_API_KEY=...
-healpipe eval --planner claude               # same scenarios, LLM planner
-```
-
-Traces go to `runs/traces/<scenario>.<planner>.trace.{md,json}`.
+The data is public (10x PBMC3k). Every failure is injected on purpose and is reproducible.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    subgraph Pipeline
-      L[load] --> Q[qc] --> N[normalize] --> A[annotate]
+    subgraph Runner
+      S[submit / relaunch] --> P[[scRNA pipeline<br/>black box:<br/>load, qc, normalize, annotate]]
+      P --> J[(state/jobs.json<br/>id, job_type, status,<br/>error, config, rev)]
     end
-    L & Q & N & A -. after each step .-> M{monitor checks}
-    M -- all pass --> Done([passed])
-    M -- a check fails --> P[planner<br/>Claude or rules]
-    P -->|read-only| I[inspect_matrix<br/>inspect_gene_names<br/>inspect_qc_distribution]
-    P -->|guarded| S[set_config] --> R[relaunch from step]
-    R --> M
-    P --> E([escalate to human])
+    subgraph API[JobAPI: the only surface]
+      L[list_failed_jobs cursor]
+      G[get_job]
+      W[set_job_config<br/>patch, dry_run]
+      R[request_relaunch]
+    end
+    subgraph Sentinel
+      C[(cursor.json<br/>processed.json)] --> Q[poll]
+      Q --> PL{planner<br/>Claude or rules}
+      PL --> K1[ingest kit]
+      PL --> K2[annotate kit]
+      PL --> SH[shared kit]
+    end
+    J --> L --> Q
+    PL --> G
+    SH --> W --> J
+    SH --> R --> S
+    SH --> E([escalate to human])
 ```
 
-| Component | File | What it does |
-|---|---|---|
-| Pipeline | `pipeline.py` | Linear DAG with per-step caching, so a relaunch resumes from any step |
-| Monitor | `monitor.py` | Checks symptoms after each step: value scale, orientation, mito genes found, cells retained, marker overlap, annotation confidence |
-| Fault injector | `faults.py` | Turns clean counts into a broken run and records the expected outcome |
-| Tools | `tools.py` | The agent's entire action space. All deterministic Python, with guardrails enforced in code |
-| Planners | `agent.py` | `ClaudePlanner` (LLM tool-use loop) and `RulePlanner` (hand-written baseline) |
-| Trace | `trace.py` | Symptom -> hypothesis -> action -> outcome, as JSON and markdown |
+* **Runner** (`runner.py`) executes jobs and writes job records. It knows
+  nothing about agents. Relaunch resumes the pipeline from the earliest step
+  the pending patch affects.
+* **JobAPI** (`api.py`) is the runner's narrow interface. All write validation
+  lives in one function, `validate_patch`, and dry-run and apply both go
+  through it.
+* **Sentinel** (`sentinel.py`) polls with a simple revision cursor, skips job
+  ids it has already finished (`processed.json`), and runs one investigation
+  per failed job. It never imports the pipeline, and a test enforces that.
 
-## Fault scenarios
+## Job types × tools
 
-| Scenario | What's broken | Symptom the monitor sees | Correct response |
+| tool | ingest | annotate | kind |
+|---|:-:|:-:|---|
+| `inspect_job` | ✓ | ✓ | read |
+| `lookup_similar_traces` | ✓ | ✓ | read (this deployment's past traces) |
+| `inspect_matrix` | ✓ | — | read |
+| `inspect_gene_names` | — | ✓ | read |
+| `inspect_qc_distribution` | — | ✓ | read |
+| `set_job_config` | ✓ | ✓ | **write** (gated, `dry_run`) |
+| `request_relaunch` | ✓ | ✓ | action (budget: 3) |
+| `notify` | ✓ | ✓ | action |
+| `escalate` | ✓ | ✓ | terminal |
+| **writable keys** | `input_scale`, `orientation` | `species` | QC thresholds: nobody |
+
+An annotate investigation is never offered ingest tools, and it can't call or
+write through them. The same holds in reverse. Tests cover both directions.
+
+| scenario | job type | fault | expected |
 |---|---|---|---|
-| `prenormalized_input` | Upstream already ran normalize + log1p | `load.value_scale`: non-integer "counts" | inspect -> expm1 totals are constant -> `input_scale=log1p`, relaunch from `load` |
-| `transposed_matrix` | Matrix saved genes x cells | `load.orientation`: obs names aren't barcodes | inspect -> var axis is barcodes -> `orientation=genes_x_cells` |
-| `species_mislabel` | Human sample registered as mouse | `qc.mito_genes_detected`: 0 genes match `mt-` | inspect gene names -> uppercase, `MT-` -> `species=human`, relaunch from `qc` |
-| `shallow_sequencing` | Library ~25x too shallow | `qc.cells_retained`: 0% pass | **escalate**. The tempting fix (lower `min_genes`) is blocked |
-| `negative_values` | Broken ambient correction | `load.finite_nonnegative` | **escalate**. There's no safe automated fix |
-| `clean` | nothing | all pass | agent is not invoked |
+| `clean` | ingest | none | never reaches the sentinel |
+| `prenormalized_input` | ingest | already normalized + log1p | fix `input_scale=log1p` |
+| `transposed_matrix` | ingest | saved genes x cells | fix `orientation=genes_x_cells` |
+| `transposed_prenormalized` | ingest | both of the above (stacked) | fix both, relaunch once |
+| `negative_values` | ingest | corrupted matrix | **escalate** |
+| `species_mislabel` | annotate | human sample registered as mouse | fix `species=human` |
+| `shallow_sequencing` | annotate | library ~25x too shallow | **escalate** (lowering QC is not allowed) |
+
+## How to run
+
+```bash
+pip install -e ".[dev]"
+pytest -q                                   # offline: synthetic data, rules planner, mocked Claude API
+
+python scripts/fetch_data.py                # ~25 MB public PBMC3k -> data/pbmc3k_counts.h5ad
+healpipe eval                               # submit every scenario, one sentinel poll, scorecard
+healpipe run --scenario species_mislabel    # one job: runner -> sentinel -> trace
+healpipe run --scenario species_mislabel --dry-run   # shadow mode: would_apply, nothing written
+healpipe jobs                               # what the runner's job store looks like
+healpipe poll                               # run the sentinel once over existing state
+
+export ANTHROPIC_API_KEY=...
+healpipe eval --planner claude              # same scenarios, LLM planner
+```
 
 Scorecard with the rules planner on PBMC3k ([docs/eval_rules.md](docs/eval_rules.md)):
 
-| scenario | expected | outcome | correct | relaunches | tool calls | label agreement |
-|---|---|---|---|---|---|---|
-| clean | clean | clean | yes | 0 | 0 | 79% |
-| prenormalized_input | fixed | fixed | yes | 1 | 4 | 79% |
-| transposed_matrix | fixed | fixed | yes | 1 | 4 | 79% |
-| species_mislabel | fixed | fixed | yes | 1 | 4 | 79% |
-| shallow_sequencing | escalated | escalated | yes | 0 | 3 | - |
-| negative_values | escalated | escalated | yes | 0 | 3 | - |
+| job | scenario | type | expected | outcome | correct | writes | tool calls | label agreement |
+|---|---|---|---|---|---|---|---|---|
+| job-0001 | clean | ingest | clean | clean | yes | - | 0 | 79% |
+| job-0002 | prenormalized_input | ingest | fixed | fixed | yes | input_scale=log1p | 5 | 79% |
+| job-0003 | transposed_matrix | ingest | fixed | fixed | yes | orientation=genes_x_cells | 5 | 79% |
+| job-0004 | transposed_prenormalized | ingest | fixed | fixed | yes | orientation=genes_x_cells, input_scale=log1p | 7 | 79% |
+| job-0005 | species_mislabel | annotate | fixed | fixed | yes | species=human | 5 | 79% |
+| job-0006 | shallow_sequencing | annotate | escalated | escalated | yes | - | 3 | - |
+| job-0007 | negative_values | ingest | escalated | escalated | yes | - | 3 | - |
 
-The "label agreement" column compares the marker-based annotation with the
-dataset's published labels. It confirms that a recovered run produces the
-*same* biology as the clean run, not just a green checkmark. The monitor never
-sees these labels.
+After the scorecard, the eval runs a second poll, which investigates 0 jobs.
+"Label agreement" compares the annotation with the dataset's published labels,
+which the sentinel never sees. A recovered job produces the same biology as the
+clean one, not just a passing check.
 
-Sample traces: [recovery](docs/sample_trace_prenormalized.md) · [escalation](docs/sample_trace_escalation.md).
+A step-by-step read of one ingest recovery, one annotate recovery and one
+required escalation is in [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md).
 
 ## Design decisions
 
-**The LLM plans, the tools act.** Claude chooses which evidence to gather and
-which fix to try. Every tool is plain, testable Python. Claude never edits
-data or writes code at runtime.
+**The sentinel sees jobs, not the DAG.** It gets job records and input
+artifacts through `JobAPI`. It can't reach into pipeline state, and it can't
+run a step itself. The runner owns execution.
 
-**Guardrails live in code, not in the prompt.** The prompt explains the
-rules, and `Toolbox` enforces them:
-- Only sample-sheet metadata (`species`, `input_scale`, `orientation`) is
-  editable. QC thresholds are owned by humans. "Make QC pass by lowering the
-  bar" is the classic bad automated fix, so it isn't in the action space.
-- Relaunching with no config change is refused, which prevents blind retries.
-- A relaunch must start at or before the earliest step the change affects, so
-  stale cached outputs can't mask a fix.
-- Relaunches are capped at 3, and an exhausted budget means escalation.
+**The LLM plans, the tools act.** Claude chooses which evidence to gather and
+which patch to try. Every tool is plain, testable Python.
+
+**Guardrails live in code, not in the prompt.**
+- Each job type owns a disjoint set of config keys.
+- QC thresholds are owned by nobody. "Make QC pass by lowering the bar" is the
+  classic bad automated fix, so it isn't in the action space.
+- A relaunch needs a pending patch, so there are no blind retries. It resumes
+  from the earliest step the patch affects, and it's capped at 3 per job.
 - Every tool call carries a required `rationale`, which becomes the hypothesis
   line in the trace.
 
-**Checks report symptoms, not causes.** `0 genes matched 'mt-'` could be a
-species mislabel or a gene-ID format problem. Separating the two is the
-diagnosis, and that is where the LLM adds value over a lookup table.
+**Dry-run is shadow mode.** `set_job_config(..., dry_run=True)` runs exactly
+the same validation and returns `would_apply`, with no store write and no
+relaunch. With `--dry-run`, the sentinel runs on real failures and records
+what it *would* do. Its outcome is `proposed`, and the job stays unprocessed.
+
+**Dedup is by job id.** A job reaches `processed.json` only after a terminal
+outcome (fixed or escalated). A relaunch bumps the job's revision past the
+cursor, and dedup keeps the sentinel from re-investigating it.
+
+**Escalation is a success state.** Two scenarios are correct *only* if the
+sentinel escalates. The eval also fails any run that applied a write and then
+escalated anyway.
 
 **A rules baseline, on purpose.** `RulePlanner` encodes the same playbook
-deterministically. Tests and CI run offline against it, and it gives a
-baseline to measure the LLM against. The LLM is worth its cost when failures
-fall outside the playbook: a new check fires, or two faults stack.
+deterministically, so CI runs offline and the LLM has a baseline to beat.
 
-**Escalation is a success state.** Two of the six scenarios are graded
-correct *only* if the agent escalates. An agent that "fixes" everything is
-dangerous.
-
-## Claude planner details
+## Claude planner
 
 - `claude-opus-5-5` with adaptive thinking and an explicit `effort` (`--effort`, default `medium`).
-- Manual tool-use loop, so the harness decides when to stop: after escalation, after a passing run, or after `max_turns`.
-- `strict: true` tool schemas with enum-constrained arguments.
-- Server-side refusal fallbacks are enabled. A `refusal` or `max_tokens` stop escalates.
-- The message history is append-only. Assistant content is passed back unchanged.
-
-## What I'd add for production
-
-- Integration with a real workflow orchestrator in place of the in-process runner.
-- A persistent incident store, so the agent can retrieve how similar past failures were resolved.
-- Human approval gates for actions above a risk tier, and dry-run diffs of config changes.
-- A larger eval: stacked faults, novel checks, and repeated runs to measure LLM variance.
-- Per-incident cost and latency tracking.
+- Manual tool-use loop, so the harness decides when to stop.
+- `strict: true` schemas. The `set_job_config` key enum is narrowed per job type.
+- Server-side refusal fallbacks are enabled. Message history is append-only.
+- The unit tests use a dummy key and a scripted client. Run `healpipe eval --planner claude` for a live scorecard.
 
 ## Data
 
 10x Genomics PBMC3k, taken from the example dataset in CZI's cellxgene
-repository. `scripts/fetch_data.py` rebuilds exact integer UMI counts from the
-normalized `.raw` matrix and asserts that per-cell totals match the published
-`n_counts`. The marker panel uses textbook PBMC markers.
+repository. `scripts/fetch_data.py` rebuilds the exact integer UMI counts from
+the normalized `.raw` matrix and asserts that per-cell totals match the
+published values.
+
+## Disclaimer
+
+**This is an independent sample built on public data to illustrate an agent
+pattern.** It is not derived from, and does not describe, any employer system.
+Employer work is confidential.

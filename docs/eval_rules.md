@@ -1,10 +1,11 @@
-| scenario | expected | outcome | correct | relaunches | tool calls | label agreement |
-|---|---|---|---|---|---|---|
-| clean | clean | clean | yes | 0 | 0 | 79% |
-| prenormalized_input | fixed | fixed | yes | 1 | 4 | 79% |
-| transposed_matrix | fixed | fixed | yes | 1 | 4 | 79% |
-| species_mislabel | fixed | fixed | yes | 1 | 4 | 79% |
-| shallow_sequencing | escalated | escalated | yes | 0 | 3 | - |
-| negative_values | escalated | escalated | yes | 0 | 3 | - |
+| job | scenario | type | expected | outcome | correct | writes | tool calls | label agreement |
+|---|---|---|---|---|---|---|---|---|
+| job-0001 | clean | ingest | clean | clean | yes | - | 0 | 79% |
+| job-0002 | prenormalized_input | ingest | fixed | fixed | yes | input_scale=log1p | 5 | 79% |
+| job-0003 | transposed_matrix | ingest | fixed | fixed | yes | orientation=genes_x_cells | 5 | 79% |
+| job-0004 | transposed_prenormalized | ingest | fixed | fixed | yes | orientation=genes_x_cells, input_scale=log1p | 7 | 79% |
+| job-0005 | species_mislabel | annotate | fixed | fixed | yes | species=human | 5 | 79% |
+| job-0006 | shallow_sequencing | annotate | escalated | escalated | yes | - | 3 | - |
+| job-0007 | negative_values | ingest | escalated | escalated | yes | - | 3 | - |
 
-**6/6 correct** (planner: rules)
+**7/7 correct** (planner: rules)
