@@ -1,28 +1,38 @@
 import pytest
 
-from healpipe.agent import RulePlanner, grade, run_scenario
+from healpipe.evaluation import run_scenarios
 from healpipe.faults import SCENARIOS
+from healpipe.pipeline import Pipeline
+from healpipe.faults import materialize
+
+ORIGINAL_SIX = ["clean", "prenormalized_input", "transposed_matrix", "species_mislabel", "shallow_sequencing", "negative_values"]
+
+
+def test_original_six_still_scored_correctly(make):
+    env = make()
+    rows, _, _ = run_scenarios(env, ORIGINAL_SIX, env.clean)
+    assert [(r.scenario, r.correct) for r in rows] == [(n, True) for n in ORIGINAL_SIX], [r.note for r in rows]
+
+
+def test_stacked_fault_needs_two_writes_and_one_relaunch(make):
+    env = make()
+    rows, _, _ = run_scenarios(env, ["transposed_prenormalized"], env.clean)
+    (row,) = rows
+    assert row.correct and row.outcome.outcome == "fixed"
+    assert {c["key"] for c in row.outcome.applied} == {"orientation", "input_scale"}
+    assert env.api.get_job(row.job_id)["attempts"] == 1
 
 
 @pytest.mark.parametrize("name", list(SCENARIOS))
-def test_rule_planner_handles_every_scenario(name, clean_h5ad, tmp_path):
-    outcome, pipe, trace = run_scenario(name, clean_h5ad, tmp_path, RulePlanner(), trace_dir=tmp_path)
-    assert outcome.outcome == SCENARIOS[name].expected
-    assert grade(name, outcome, pipe.cfg)
-    assert (tmp_path / f"{name}.rules.trace.md").exists()
+def test_every_fault_actually_breaks_the_run(name, clean_h5ad, tmp_path):
+    s = SCENARIOS[name]
+    result = Pipeline(materialize(s, clean_h5ad, tmp_path), s.config).run()
+    assert (result.status == "passed") == (s.expected == "clean")
 
 
-def test_every_fault_actually_breaks_the_run(clean_h5ad, tmp_path):
-    from healpipe.faults import materialize
-    from healpipe.pipeline import Pipeline
-
-    for s in SCENARIOS.values():
-        result = Pipeline(materialize(s, clean_h5ad, tmp_path), s.config).run()
-        assert (result.status == "passed") == (s.expected == "clean"), s.name
-
-
-def test_fixed_runs_recover_clean_annotation(clean_h5ad, tmp_path):
-    _, clean, _ = run_scenario("clean", clean_h5ad, tmp_path, RulePlanner())
-    _, fixed, _ = run_scenario("transposed_matrix", clean_h5ad, tmp_path, RulePlanner())
-    assert clean.reference_agreement() > 0.9
-    assert fixed.reference_agreement() == pytest.approx(clean.reference_agreement())
+def test_recovered_jobs_match_clean_annotation(make):
+    env = make()
+    rows, _, _ = run_scenarios(env, ["clean", "transposed_matrix", "species_mislabel"], env.clean)
+    clean, *fixed = rows
+    assert clean.agreement > 0.9
+    assert all(r.agreement == pytest.approx(clean.agreement) for r in fixed)

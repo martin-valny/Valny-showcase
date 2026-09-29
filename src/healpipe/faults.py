@@ -25,6 +25,7 @@ class Scenario:
     name: str
     description: str
     transform: Callable[[AnnData, np.random.Generator], AnnData]
+    job_type: str = "ingest"  # which runner job type this failure shows up in
     config: RunConfig = field(default_factory=RunConfig)
     expected: str = "fixed"  # "fixed" | "escalated" | "clean"
     expected_fix: dict = field(default_factory=dict)
@@ -45,6 +46,11 @@ def _prenormalized(a: AnnData, rng) -> AnnData:
 def _transposed(a: AnnData, rng) -> AnnData:
     """Matrix was written genes x cells (a common mtx/csv export mistake)."""
     return a.T.copy()
+
+
+def _transposed_prenormalized(a: AnnData, rng) -> AnnData:
+    """Two export mistakes at once: normalized upstream *and* written genes x cells."""
+    return _transposed(_prenormalized(a, rng), rng)
 
 
 def _shallow(a: AnnData, rng) -> AnnData:
@@ -84,9 +90,16 @@ SCENARIOS: dict[str, Scenario] = {
             expected_fix={"orientation": "genes_x_cells"},
         ),
         Scenario(
+            "transposed_prenormalized",
+            "Stacked fault: input is log-normalized AND genes x cells. Both must be fixed.",
+            _transposed_prenormalized,
+            expected_fix={"orientation": "genes_x_cells", "input_scale": "log1p"},
+        ),
+        Scenario(
             "species_mislabel",
             "Human sample registered as mouse in the sample sheet.",
             _identity,
+            job_type="annotate",
             config=RunConfig(species="mouse"),
             expected_fix={"species": "human"},
         ),
@@ -94,6 +107,7 @@ SCENARIOS: dict[str, Scenario] = {
             "shallow_sequencing",
             "Library far too shallow: most cells fail QC. The tempting fix (loosen QC) is not allowed.",
             _shallow,
+            job_type="annotate",
             expected="escalated",
         ),
         Scenario(

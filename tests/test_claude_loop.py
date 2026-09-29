@@ -1,8 +1,12 @@
-"""Exercise ClaudePlanner's tool loop against a scripted stand-in for the API client."""
+"""Exercise ClaudePlanner's tool loop against a scripted stand-in for the API (dummy key, no network)."""
 
 from types import SimpleNamespace as NS
 
-from healpipe.agent import ClaudePlanner, run_scenario
+import pytest
+
+from healpipe.evaluation import run_scenarios
+from healpipe.planners import ClaudePlanner
+from healpipe.toolkits import KITS
 
 
 def _tool_use(i, name, **inp):
@@ -21,41 +25,51 @@ class ScriptedClient:
         return NS(content=content, stop_reason=stop)
 
 
-def _planner(turns):
-    p = ClaudePlanner.__new__(ClaudePlanner)
-    p.client, p.model, p.effort, p.max_turns = ScriptedClient(turns), "claude-opus-5-5", "medium", 12
-    return p
+@pytest.fixture
+def planner(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-dummy-key")
+
+    def _make(turns):
+        p = ClaudePlanner()
+        p.client = ScriptedClient(turns)
+        return p
+
+    return _make
 
 
-def test_claude_loop_fixes_species(clean_h5ad, tmp_path):
-    planner = _planner(
+def test_annotate_job_fixed_and_sees_only_annotate_tools(make, planner):
+    p = planner(
         [
             [_tool_use(1, "inspect_gene_names")],
-            [_tool_use(2, "set_config", key="species", value="human")],
-            [_tool_use(3, "relaunch", from_step="qc")],
-            [NS(type="text", text="Species was mislabeled; fixed and relaunched.")],
+            [_tool_use(2, "set_job_config", key="species", value="human", dry_run=False)],
+            [_tool_use(3, "request_relaunch")],
+            [_tool_use(4, "notify", message="recovered")],
+            [NS(type="text", text="Species was mislabeled; patched and relaunched.")],
         ]
     )
-    outcome, pipe, trace = run_scenario("species_mislabel", clean_h5ad, tmp_path, planner)
-    assert outcome.outcome == "fixed" and pipe.cfg.species == "human"
+    env = make(planner=p)
+    (row,), _, _ = run_scenarios(env, ["species_mislabel"], env.clean)
+    assert row.correct and row.outcome.outcome == "fixed"
 
-    reqs = planner.client.requests
-    assert all(t["strict"] for t in reqs[0]["tools"])
-    # Each tool result answers the preceding tool_use id, in a user turn.
-    last = reqs[-1]["messages"][-1]
-    assert last["role"] == "user" and last["content"][0]["tool_use_id"] == "tu_3"
-    assert any(e["kind"] == "note" and "agent summary" in e["text"] for e in trace.events)
+    first = p.client.requests[0]
+    names = {t["name"] for t in first["tools"]}
+    assert not names & set(KITS["ingest"]) and set(KITS["annotate"]) <= names
+    assert all(t["strict"] for t in first["tools"])
+    assert "`annotate`" in first["system"]
+    # tool results answer the preceding tool_use ids
+    assert p.client.requests[-1]["messages"][-1]["content"][0]["tool_use_id"] == "tu_4"
 
 
-def test_claude_loop_blocks_threshold_edit_then_escalates(clean_h5ad, tmp_path):
-    planner = _planner(
+def test_rejected_write_is_reported_as_tool_error(make, planner):
+    p = planner(
         [
-            [_tool_use(1, "set_config", key="min_genes", value="10")],
+            [_tool_use(1, "set_job_config", key="species", value="human", dry_run=False)],
             [_tool_use(2, "escalate", reason="library too shallow", evidence="median 73 genes/cell")],
             [NS(type="text", text="Escalated.")],
         ]
     )
-    outcome, _, trace = run_scenario("shallow_sequencing", clean_h5ad, tmp_path, planner)
-    assert outcome.outcome == "escalated"
-    first_result = planner.client.requests[1]["messages"][-1]["content"][0]
-    assert first_result["is_error"] and "not agent-editable" in first_result["content"]
+    env = make(planner=p)
+    (row,), _, _ = run_scenarios(env, ["shallow_sequencing"], env.clean)
+    result = p.client.requests[1]["messages"][-1]["content"][0]
+    assert result["is_error"] and "already 'human'" in result["content"]
+    assert row.outcome.outcome == "escalated" and row.correct

@@ -36,3 +36,17 @@ def clean_h5ad(tmp_path_factory):
     path = tmp_path_factory.mktemp("data") / "synthetic_counts.h5ad"
     a.write_h5ad(path)
     return path
+
+
+@pytest.fixture
+def make(tmp_path, clean_h5ad):
+    """make(planner=None, shadow=False) -> Environment in an isolated tmp dir (runner + JobAPI + sentinel)."""
+    from healpipe.evaluation import make_env
+    from healpipe.planners import RulePlanner
+
+    def _make(planner=None, shadow=False):
+        env = make_env(tmp_path / "state", tmp_path / "runs", planner or RulePlanner(), shadow=shadow)
+        env.clean = clean_h5ad
+        return env
+
+    return _make

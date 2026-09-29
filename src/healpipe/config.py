@@ -36,3 +36,10 @@ AGENT_EDITABLE: dict[str, tuple[set[str], str]] = {
     "input_scale": ({"counts", "log1p"}, "load"),
     "orientation": ({"cells_x_genes", "genes_x_cells"}, "load"),
 }
+
+# Each job type owns a disjoint slice of the editable keys. An investigation of
+# one job type cannot write keys that belong to another.
+JOB_TYPE_KEYS: dict[str, tuple[str, ...]] = {
+    "ingest": ("input_scale", "orientation"),
+    "annotate": ("species",),
+}
