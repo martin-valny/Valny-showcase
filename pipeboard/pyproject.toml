@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pipeboard"
+version = "0.1.0"
+description = "Small web UI for a single-cell pipeline: schema-driven form, background jobs, live logs, HTML report."
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn>=0.29",
+  "pyyaml",
+  "anndata>=0.10",
+  "scanpy>=1.10",
+  "numpy",
+  "pandas",
+  "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
+
+[project.scripts]
+pipeboard = "pipeboard.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pipeboard = ["static/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+filterwarnings = ["ignore::FutureWarning", "ignore::UserWarning", "ignore::DeprecationWarning"]

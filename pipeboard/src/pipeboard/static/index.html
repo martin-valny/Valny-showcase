@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pipeboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">pipeboard <span class="muted">· PBMC3k pipeline runner</span></div>
+    <nav role="tablist">
+      <button role="tab" data-tab="run" aria-selected="true">Run</button>
+      <button role="tab" data-tab="jobs">Jobs</button>
+      <button role="tab" data-tab="report">Report</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-run" class="tab">
+      <div id="data-status" class="banner">Checking data…</div>
+      <form id="run-form" novalidate>
+        <div id="fields"></div>
+        <fieldset id="setup" class="field">
+          <label for="sample_col_select">Sample / group column <span class="muted">(optional)</span></label>
+          <select id="sample_col_select"></select>
+          <p class="help" id="setup-help">Colors the UMAP and counts cells per group in the report.</p>
+        </fieldset>
+        <div id="form-error" class="error" hidden></div>
+        <button type="submit" id="submit" class="primary">Run pipeline</button>
+      </form>
+    </section>
+
+    <section id="tab-jobs" class="tab" hidden>
+      <table id="jobs-table">
+        <thead><tr><th>Job</th><th>Status</th><th>Started</th><th>Ended</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p id="jobs-empty" class="muted">No jobs yet. Start one from the Run tab.</p>
+      <div id="log-panel" hidden>
+        <div class="log-head">
+          <strong id="log-title"></strong>
+          <span id="log-status" class="status"></span>
+          <span class="spacer"></span>
+          <button id="cancel-btn" class="danger" hidden>Cancel</button>
+          <button id="open-report-btn" hidden>Open report</button>
+        </div>
+        <p id="log-error" class="error" hidden></p>
+        <pre id="log"></pre>
+      </div>
+    </section>
+
+    <section id="tab-report" class="tab" hidden>
+      <div class="report-head">
+        <select id="report-select"></select>
+        <a id="report-download" href="#">Download report.html</a>
+      </div>
+      <p id="report-empty" class="muted">No reports yet.</p>
+      <iframe id="report-frame" title="Job report" hidden></iframe>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

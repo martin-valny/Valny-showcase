@@ -1,0 +1,27 @@
+# Source of truth for the Run form. The UI builds its inputs from this file.
+# Supported types: int, float, bool, choice (with `options`).
+parameters:
+  - name: min_genes
+    type: int
+    default: 200
+    min: 0
+    max: 5000
+    help: Drop cells with fewer genes than this.
+  - name: max_mito_pct
+    type: float
+    default: 20
+    min: 0
+    max: 100
+    help: Drop cells with mitochondrial percentage above this.
+  - name: n_hvgs
+    type: int
+    default: 2000
+    min: 100
+    max: 5000
+    help: Highly variable genes for PCA/UMAP.
+  - name: n_neighbors
+    type: int
+    default: 15
+    min: 5
+    max: 50
+    help: k for the neighbor graph.
