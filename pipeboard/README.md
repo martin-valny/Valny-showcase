@@ -39,7 +39,11 @@ Without the data file, the Run tab says to run `scripts/fetch_data.py` and disab
 
 ## Screenshots
 
-_TODO: add a GIF of a local run._ Until then, these stills come from a real local run on PBMC3k:
+A local run on PBMC3k: fill the generated form, submit, watch the log stream, then open the report.
+
+![Local run](docs/screenshots/local-run.gif)
+
+Stills from the same kind of run:
 
 | Run: form generated from YAML | Jobs: live log + cancel |
 |---|---|

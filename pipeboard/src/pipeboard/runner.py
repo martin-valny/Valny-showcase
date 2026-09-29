@@ -61,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     (job_dir / "report.html").write_text(report.render({**state, "status": "succeeded", "ended_at": now()}, job["params"], metrics, None, job.get("sample_col")))
-    _log(f"report written: {job_dir / 'report.html'}")
+    _log(f"report written: runs/{job_dir.name}/report.html")
     _finish(job_dir, status="succeeded", error=None)
     _log("job succeeded")
     return 0
