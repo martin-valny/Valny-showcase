@@ -3,11 +3,18 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [healpipe, pipeboard]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
-      # Offline: synthetic fixture, rules planner, scripted stand-in for the Claude API.
+      # Offline: synthetic fixtures only. No dataset download, no API keys.
       - run: pytest -q
