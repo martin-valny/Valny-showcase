@@ -1,0 +1,212 @@
+{
+  "format": 1,
+  "scenario": "transposed_matrix",
+  "job_type": "ingest",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "recorded_at": "2026-09-30T08:13:58+00:00",
+  "outcome": "fixed",
+  "turns": [
+    {
+      "stop_reason": "tool_use",
+      "text": [],
+      "tool_uses": [
+        {
+          "id": "toolu_01FLN8XjEb8LPQEqTqJoqnBx",
+          "name": "inspect_job",
+          "input": {
+            "rationale": "Check current config and editable keys; hypothesis: orientation set to cells_x_genes while matrix is genes x cells."
+          }
+        },
+        {
+          "id": "toolu_012Ya4hKxMD7qU72kjEag49z",
+          "name": "inspect_matrix",
+          "input": {
+            "rationale": "Verify whether var axis holds barcodes (transposed matrix) and check value scale."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01FLN8XjEb8LPQEqTqJoqnBx",
+          "is_error": false,
+          "result": {
+            "id": "job-0003",
+            "job_type": "ingest",
+            "status": "failed",
+            "job_error": "load.orientation: 0% of observation names look like cell barcodes",
+            "failed_checks": [
+              {
+                "step": "load",
+                "name": "orientation",
+                "ok": false,
+                "message": "0% of observation names look like cell barcodes",
+                "metrics": {
+                  "obs_barcode_fraction": 0.0,
+                  "shape": [
+                    13714,
+                    2638
+                  ]
+                }
+              }
+            ],
+            "config": {
+              "species": "human",
+              "input_scale": "counts",
+              "orientation": "cells_x_genes",
+              "min_genes": 200,
+              "max_pct_mito": 5.0,
+              "min_cells_per_gene": 3,
+              "target_sum": 10000.0
+            },
+            "editable_keys": {
+              "input_scale": [
+                "counts",
+                "log1p"
+              ],
+              "orientation": [
+                "cells_x_genes",
+                "genes_x_cells"
+              ]
+            },
+            "attempts_left": 3,
+            "recent_events": [
+              {
+                "kind": "submitted",
+                "scenario": "transposed_matrix"
+              },
+              {
+                "kind": "run",
+                "from_step": "load",
+                "status": "failed",
+                "failed_checks": [
+                  "load.orientation"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "tool_use_id": "toolu_012Ya4hKxMD7qU72kjEag49z",
+          "is_error": false,
+          "result": {
+            "shape_on_disk": [
+              13714,
+              2638
+            ],
+            "obs_name_examples": [
+              "AL627309.1",
+              "AP006222.2",
+              "RP11-206L10.2",
+              "RP11-206L10.9"
+            ],
+            "var_name_examples": [
+              "AAACATACAACCAC-1",
+              "AAACATTGAGCTAC-1",
+              "AAACATTGATCAGC-1",
+              "AAACCGTGCTTCCG-1"
+            ],
+            "obs_barcode_like_fraction": 0.0,
+            "var_barcode_like_fraction": 1.0,
+            "density": 0.0619,
+            "n_nan": 0,
+            "n_negative": 0,
+            "min_nonzero": 1.0,
+            "max": 419.0,
+            "frac_nonzero_integer": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "text": [
+        "Matrix is genes\u00d7cells (barcodes on var axis); values are integer counts, so input_scale is correct."
+      ],
+      "tool_uses": [
+        {
+          "id": "toolu_01NkRer3dM8Gt6MkhMXXQCPh",
+          "name": "set_job_config",
+          "input": {
+            "rationale": "Var names are 100% barcodes and obs are gene symbols, so the matrix is stored genes_x_cells.",
+            "key": "orientation",
+            "value": "genes_x_cells",
+            "dry_run": false
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01NkRer3dM8Gt6MkhMXXQCPh",
+          "is_error": false,
+          "result": {
+            "status": "applied",
+            "job_id": "job-0003",
+            "patch": {
+              "orientation": "genes_x_cells"
+            },
+            "relaunch_from": "load"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "text": [],
+      "tool_uses": [
+        {
+          "id": "toolu_01X9HouvnTkxwEKyuukpcZt1",
+          "name": "request_relaunch",
+          "input": {
+            "rationale": "Orientation fix should let load pass; counts scale already correct."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01X9HouvnTkxwEKyuukpcZt1",
+          "is_error": false,
+          "result": {
+            "job_id": "job-0003",
+            "status": "succeeded",
+            "from_step": "load",
+            "job_error": null,
+            "failed_checks": [],
+            "attempts_left": 2
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "text": [],
+      "tool_uses": [
+        {
+          "id": "toolu_01DiVL2in2g5rHJTHkLKFi9s",
+          "name": "notify",
+          "input": {
+            "rationale": "Report recovery.",
+            "message": "job-0003 (ingest) recovered: matrix was stored genes\u00d7cells (var names 100% barcodes), set orientation=genes_x_cells, relaunch succeeded."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01DiVL2in2g5rHJTHkLKFi9s",
+          "is_error": false,
+          "result": {
+            "sent": true
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "end_turn",
+      "text": [
+        "job-0003 failed because the matrix is stored genes \u00d7 cells: all of the column names are cell barcodes and the row names are gene symbols. I changed orientation to genes_x_cells and left input_scale at counts, since the values are clean whole-number counts, and the relaunch succeeded with no failed checks."
+      ],
+      "tool_uses": [],
+      "results": []
+    }
+  ]
+}

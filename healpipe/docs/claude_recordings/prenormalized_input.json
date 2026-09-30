@@ -1,0 +1,212 @@
+{
+  "format": 1,
+  "scenario": "prenormalized_input",
+  "job_type": "ingest",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "recorded_at": "2026-09-30T08:13:26+00:00",
+  "outcome": "fixed",
+  "turns": [
+    {
+      "stop_reason": "tool_use",
+      "text": [],
+      "tool_uses": [
+        {
+          "id": "toolu_015TtFqFwtUHuvih37xA3Yr7",
+          "name": "inspect_job",
+          "input": {
+            "rationale": "Check config and editable keys; hypothesis: input is log1p but config says counts."
+          }
+        },
+        {
+          "id": "toolu_01GPGj3h8fyUVc4hwEU1WR2U",
+          "name": "inspect_matrix",
+          "input": {
+            "rationale": "Verify whether values look log1p-normalized (max ~7.5, non-integer, no negatives/NaNs) and orientation is correct."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_015TtFqFwtUHuvih37xA3Yr7",
+          "is_error": false,
+          "result": {
+            "id": "job-0002",
+            "job_type": "ingest",
+            "status": "failed",
+            "job_error": "load.value_scale: expected raw integer counts but 100.0% of non-zero values are non-integer",
+            "failed_checks": [
+              {
+                "step": "load",
+                "name": "value_scale",
+                "ok": false,
+                "message": "expected raw integer counts but 100.0% of non-zero values are non-integer",
+                "metrics": {
+                  "input_scale": "counts",
+                  "frac_integer": 0.0,
+                  "max": 7.47
+                }
+              }
+            ],
+            "config": {
+              "species": "human",
+              "input_scale": "counts",
+              "orientation": "cells_x_genes",
+              "min_genes": 200,
+              "max_pct_mito": 5.0,
+              "min_cells_per_gene": 3,
+              "target_sum": 10000.0
+            },
+            "editable_keys": {
+              "input_scale": [
+                "counts",
+                "log1p"
+              ],
+              "orientation": [
+                "cells_x_genes",
+                "genes_x_cells"
+              ]
+            },
+            "attempts_left": 3,
+            "recent_events": [
+              {
+                "kind": "submitted",
+                "scenario": "prenormalized_input"
+              },
+              {
+                "kind": "run",
+                "from_step": "load",
+                "status": "failed",
+                "failed_checks": [
+                  "load.value_scale"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "tool_use_id": "toolu_01GPGj3h8fyUVc4hwEU1WR2U",
+          "is_error": false,
+          "result": {
+            "shape_on_disk": [
+              2638,
+              13714
+            ],
+            "obs_name_examples": [
+              "AAACATACAACCAC-1",
+              "AAACATTGAGCTAC-1",
+              "AAACATTGATCAGC-1",
+              "AAACCGTGCTTCCG-1"
+            ],
+            "var_name_examples": [
+              "AL627309.1",
+              "AP006222.2",
+              "RP11-206L10.2",
+              "RP11-206L10.9"
+            ],
+            "obs_barcode_like_fraction": 1.0,
+            "var_barcode_like_fraction": 0.0,
+            "density": 0.0619,
+            "n_nan": 0,
+            "n_negative": 0,
+            "min_nonzero": 0.7545999884605408,
+            "max": 7.46959924697876,
+            "frac_nonzero_integer": 0.0,
+            "expm1_per_cell_total_median": 10000.0,
+            "expm1_per_cell_total_cv": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "text": [
+        "Matrix is log1p of 1e4-normalized data (expm1 totals constant at 10000), orientation correct, no corruption."
+      ],
+      "tool_uses": [
+        {
+          "id": "toolu_01WLNXkzDVbn1ZRWuH9pPHcq",
+          "name": "set_job_config",
+          "input": {
+            "rationale": "Data is log1p-normalized (expm1 per-cell totals = 10000, CV 0), so input_scale should be log1p.",
+            "key": "input_scale",
+            "value": "log1p",
+            "dry_run": false
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01WLNXkzDVbn1ZRWuH9pPHcq",
+          "is_error": false,
+          "result": {
+            "status": "applied",
+            "job_id": "job-0002",
+            "patch": {
+              "input_scale": "log1p"
+            },
+            "relaunch_from": "load"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "text": [],
+      "tool_uses": [
+        {
+          "id": "toolu_01CoZURJLsomazLxfvgkkYfg",
+          "name": "request_relaunch",
+          "input": {
+            "rationale": "Relaunch from load with corrected input_scale."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01CoZURJLsomazLxfvgkkYfg",
+          "is_error": false,
+          "result": {
+            "job_id": "job-0002",
+            "status": "succeeded",
+            "from_step": "load",
+            "job_error": null,
+            "failed_checks": [],
+            "attempts_left": 2
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "text": [],
+      "tool_uses": [
+        {
+          "id": "toolu_01DF7hmWYhJa3b2GFZddDwC1",
+          "name": "notify",
+          "input": {
+            "rationale": "Report successful recovery.",
+            "message": "job-0002 (ingest) recovered: input was log1p-normalized (expm1 per-cell totals = 10000), set input_scale=log1p; relaunch succeeded."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01DF7hmWYhJa3b2GFZddDwC1",
+          "is_error": false,
+          "result": {
+            "sent": true
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "end_turn",
+      "text": [
+        "job-0002 failed because its config said the input was raw counts, but the matrix had already been normalized and log-transformed (log1p). Every non-zero value was a decimal, the largest was 7.47, and undoing the log gives exactly 10,000 per cell with no variation between cells. I found no negative or missing values, and the matrix layout (cells as rows, genes as columns) was right.\n\nI set `input_scale` to `log1p` and relaunched once; the job succeeded with no failed checks, and I posted a note to on-call (2 relaunch attempts left)."
+      ],
+      "tool_uses": [],
+      "results": []
+    }
+  ]
+}

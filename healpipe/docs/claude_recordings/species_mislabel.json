@@ -1,0 +1,218 @@
+{
+  "format": 1,
+  "scenario": "species_mislabel",
+  "job_type": "annotate",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "recorded_at": "2026-09-30T08:14:35+00:00",
+  "outcome": "fixed",
+  "turns": [
+    {
+      "stop_reason": "tool_use",
+      "text": [],
+      "tool_uses": [
+        {
+          "id": "toolu_01LcS4RDRfyjr81pGrvjkaTr",
+          "name": "inspect_job",
+          "input": {
+            "rationale": "Check config species and editable keys; hypothesis: species set to mouse but data is human."
+          }
+        },
+        {
+          "id": "toolu_01PdbMVPSK26aJ7Gn29GPpZ5",
+          "name": "inspect_gene_names",
+          "input": {
+            "rationale": "Test whether genes use human-style MT- prefix instead of mouse mt-."
+          }
+        },
+        {
+          "id": "toolu_01NxgKzdgwSGv5gaPyyTEyQS",
+          "name": "inspect_qc_distribution",
+          "input": {
+            "rationale": "Check that depth/complexity pass thresholds so the data itself is not the problem."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01LcS4RDRfyjr81pGrvjkaTr",
+          "is_error": false,
+          "result": {
+            "id": "job-0005",
+            "job_type": "annotate",
+            "status": "failed",
+            "job_error": "qc.mito_genes_detected: 0 mitochondrial genes matched prefix 'mt-'",
+            "failed_checks": [
+              {
+                "step": "qc",
+                "name": "mito_genes_detected",
+                "ok": false,
+                "message": "0 mitochondrial genes matched prefix 'mt-'",
+                "metrics": {
+                  "prefix": "mt-",
+                  "n_mito_genes": 0
+                }
+              }
+            ],
+            "config": {
+              "species": "mouse",
+              "input_scale": "counts",
+              "orientation": "cells_x_genes",
+              "min_genes": 200,
+              "max_pct_mito": 5.0,
+              "min_cells_per_gene": 3,
+              "target_sum": 10000.0
+            },
+            "editable_keys": {
+              "species": [
+                "human",
+                "mouse"
+              ]
+            },
+            "attempts_left": 3,
+            "recent_events": [
+              {
+                "kind": "submitted",
+                "scenario": "species_mislabel"
+              },
+              {
+                "kind": "run",
+                "from_step": "load",
+                "status": "failed",
+                "failed_checks": [
+                  "qc.mito_genes_detected"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "tool_use_id": "toolu_01PdbMVPSK26aJ7Gn29GPpZ5",
+          "is_error": false,
+          "result": {
+            "n_genes": 13714,
+            "examples": [
+              "AL627309.1",
+              "AP006222.2",
+              "RP11-206L10.2",
+              "MT-ND1",
+              "MT-ND2",
+              "MT-CO1"
+            ],
+            "fraction_all_uppercase": 0.976,
+            "fraction_titlecase": 0.023,
+            "n_prefixed_MT-": 13,
+            "n_prefixed_mt-": 0,
+            "note": "Human symbols are conventionally uppercase (MT-CO1). Mouse symbols are title-case (mt-Co1)."
+          }
+        },
+        {
+          "tool_use_id": "toolu_01NxgKzdgwSGv5gaPyyTEyQS",
+          "is_error": false,
+          "result": {
+            "n_cells": 2638,
+            "genes_per_cell_percentiles": {
+              "5": 458.9,
+              "25": 699.0,
+              "50": 819.0,
+              "75": 954.0,
+              "95": 1361.2
+            },
+            "umis_per_cell_percentiles": {
+              "5": 1012.7,
+              "25": 1779.2,
+              "50": 2213.0,
+              "75": 2766.8,
+              "95": 4211.0
+            },
+            "min_genes_threshold": 200,
+            "fraction_cells_passing_min_genes": 1.0,
+            "note": "QC thresholds are fixed by the analysis owner and are not agent-editable."
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "text": [
+        "Evidence is clear: 13 MT- genes, 0 mt-, 97.6% uppercase \u2192 human data mislabelled as mouse. QC depth is fine."
+      ],
+      "tool_uses": [
+        {
+          "id": "toolu_01LTak3AvDcTgkXLK7vrMMg3",
+          "name": "set_job_config",
+          "input": {
+            "rationale": "Gene names are human-style (13 MT-, 0 mt-, 97.6% uppercase), so species should be human.",
+            "key": "species",
+            "value": "human",
+            "dry_run": false
+          }
+        },
+        {
+          "id": "toolu_018AC5Y2GX15v8mZ5zaTrAVn",
+          "name": "request_relaunch",
+          "input": {
+            "rationale": "Species patched to human; relaunch should match MT- genes and pass QC."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01LTak3AvDcTgkXLK7vrMMg3",
+          "is_error": false,
+          "result": {
+            "status": "applied",
+            "job_id": "job-0005",
+            "patch": {
+              "species": "human"
+            },
+            "relaunch_from": "qc"
+          }
+        },
+        {
+          "tool_use_id": "toolu_018AC5Y2GX15v8mZ5zaTrAVn",
+          "is_error": false,
+          "result": {
+            "job_id": "job-0005",
+            "status": "succeeded",
+            "from_step": "qc",
+            "job_error": null,
+            "failed_checks": [],
+            "attempts_left": 2
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "text": [],
+      "tool_uses": [
+        {
+          "id": "toolu_01SKNy1HVhp6PXMBjFySJnxf",
+          "name": "notify",
+          "input": {
+            "rationale": "Job recovered; report a one-line summary to on-call.",
+            "message": "job-0005 (annotate) recovered: species was set to mouse but the genes are human (13 MT- genes, 0 mt-). Changed species to human, relaunched from qc, and the job succeeded."
+          }
+        }
+      ],
+      "results": [
+        {
+          "tool_use_id": "toolu_01SKNy1HVhp6PXMBjFySJnxf",
+          "is_error": false,
+          "result": {
+            "sent": true
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "end_turn",
+      "text": [
+        "I fixed job-0005: it had failed because its species setting was \"mouse,\" but the gene names are human (13 genes start with `MT-`, none with `mt-`, and 97.6% are uppercase). I changed species to human and relaunched from qc, and the job succeeded with no failed checks and 2 relaunch attempts left."
+      ],
+      "tool_uses": [],
+      "results": []
+    }
+  ]
+}
