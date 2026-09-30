@@ -8,7 +8,7 @@ Three small, self-contained projects built on public single-cell and spatial dat
 |---|---|---|
 | [**healpipe**](healpipe/) | **An on-call agent pattern.** A runner executes jobs. A sentinel polls failed jobs, investigates with tools specific to each job type, then makes a gated, dry-runnable config write and relaunches, or escalates. It has an LLM planner (Claude) and a rules baseline. | [README](healpipe/README.md) · [walkthrough](healpipe/docs/WALKTHROUGH.md) |
 | [**pipeboard**](pipeboard/) | **A small internal tool.** A form generated from a YAML schema, background jobs as subprocesses, live log streaming with cancel, and a self-contained HTML report. No agent. | [README](pipeboard/README.md) |
-| [**ovary-spatial-tutorial**](ovary-spatial-tutorial/) | **An educational Seurat walkthrough** of one published mouse ovary Curio Seeker 3×3 sample (Mantri *et al.*, PNAS 2024; GEO GSE240271): QC → clustering → marker annotation → spatial maps → co-localization → Wilcoxon DE, with "Check your understanding" questions. R Markdown. | [README](ovary-spatial-tutorial/README.md) · [notebook](ovary-spatial-tutorial/ovary_analysis.Rmd) |
+| [**ovary-spatial-tutorial**](ovary-spatial-tutorial/) | **An educational Seurat walkthrough** of one published mouse ovary Curio Seeker 3×3 sample (Mantri *et al.*, PNAS 2024; GEO GSE240271): QC → clustering → marker annotation → spatial maps → co-localization → Wilcoxon DE, with "Check your understanding" questions. R Markdown. | [README](ovary-spatial-tutorial/README.md) · [notebook](ovary-spatial-tutorial/ovary_analysis.Rmd) · [knitted HTML](ovary-spatial-tutorial/docs/ovary_analysis.html) |
 
 ![pipeboard report UMAP](pipeboard/docs/screenshots/report-umap.png)
 

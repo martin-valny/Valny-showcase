@@ -645,14 +645,28 @@ FeaturePlot(obj, features = key_genes, ncol = 3, pt.size = 0.2, order = TRUE) &
 # update the mapping to match what the markers show.
 # Format: "cluster_number" = "CellType"
 
+# Evidence used for this sample (GSM7689281, resolution 0.5, 9 clusters):
+#   0  Foxl2 / Cyp19a1 / Inha, weaker; DE Inhbb, Ccnd2        -> mural granulosa
+#   1  Cyp17a1 + Insl3, with Dcn / Col1a1 / Pdgfra              -> theca
+#   2  Foxl2, Cyp19a1, Inha, Fshr                               -> mural granulosa
+#   3  Foxl2, Cyp19a1, Inha; DE Comp, Enc1                      -> mural granulosa
+#   4  no panel marker and no strongly specific DE gene         -> left unassigned
+#   5  Star + Lhcgr high, Cyp17a1 absent (so not theca),
+#      Cyp19a1 low; DE Sfrp4, Sgk1; large round domains         -> periovulatory granulosa
+#   6  Gdf9, Zp3, Nobox, Figla, Ooep; DE H1foo                  -> oocyte
+#   7  the only Pecam1 / Cdh5 signal; DE Lyve1, Ccl21a;
+#      also Acta2 / Tagln (adjacent smooth muscle)              -> endothelial
+#   8  weak Cyp17a1 / Vim / Acta2, no specific markers          -> stroma
+# Cumulus-expansion markers (Ptx3, Has2, Ptger2, Tnfaip6) are essentially absent
+# in this sample, so no cluster is labelled Cumulus.
 cluster_annotation <- c(
   "0" = "Granulosa_mural",
-  "1" = "Stroma",
+  "1" = "Theca",
   "2" = "Granulosa_mural",
-  "3" = "Theca",
-  "4" = "Cumulus",
-  "5" = "Oocyte",
-  "6" = "SmoothMuscle",
+  "3" = "Granulosa_mural",
+  "4" = "Unassigned",
+  "5" = "Granulosa_periovulatory",
+  "6" = "Oocyte",
   "7" = "Endothelial",
   "8" = "Stroma"
 )

@@ -32,7 +32,7 @@ Each section ends with a short **Check your understanding** question on the biol
 
 ## How to run
 
-**Reading is enough.** The notebook explains every step in prose and code. Knitting it yourself is optional and heavy: ~80,000 beads, several GB of RAM, and a long runtime.
+**Reading is enough.** The notebook explains every step in prose and code, and the knitted HTML in `docs/` shows every output. Knitting it yourself is optional and heavy: ~80,000 beads, several GB of RAM, and a long runtime.
 
 To knit it locally:
 
@@ -53,7 +53,7 @@ Rscript -e 'rmarkdown::render("ovary_analysis.Rmd")'
 
 **A note on cluster labels.** The `cluster_annotation` map in the Cell typing section is an example for this sample, written after looking at the marker plots. Cluster numbers can change with software versions even though the seed is fixed. Check the DotPlot and update the map if yours differ.
 
-**What was checked when this repo was prepared:** every R chunk parses (`knitr::purl` + `parse`), and the fetch/convert script was tested on synthetic AnnData files. No knitted HTML is included, because the GEO file could not be downloaded in the environment used to prepare the repo. Knit it locally to see the figures.
+**Knitted output:** [`docs/ovary_analysis.html`](docs/ovary_analysis.html) (~16 MB, self-contained) is the notebook run end to end on GSM7689281 with R 4.6 and Seurat v5: 77,202 beads, 15,135 after QC, 9 clusters. Download it and open it in a browser; GitHub only shows HTML as source. Every R chunk is also parse-checked in CI.
 
 ## Disclaimer
 
