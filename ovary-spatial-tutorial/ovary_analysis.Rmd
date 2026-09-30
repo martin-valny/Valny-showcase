@@ -138,8 +138,10 @@ print(top_keys$name)
 # AnnData stores the matrix in /X. It can be dense (2D dataset) or sparse
 # (a group with /X/data, /X/indices, /X/indptr following CSR format).
 
-obs_names <- h5read(H5_PATH, "/obs/_index")   # bead barcodes  (rows in AnnData)
-var_names <- h5read(H5_PATH, "/var/_index")   # gene names     (cols in AnnData)
+# rhdf5 returns strings as 1-D arrays; Seurat v5 needs plain character vectors,
+# so convert them (and make sure names are unique).
+obs_names <- make.unique(as.character(h5read(H5_PATH, "/obs/_index")))  # bead barcodes (rows in AnnData)
+var_names <- make.unique(as.character(h5read(H5_PATH, "/var/_index")))  # gene names    (cols in AnnData)
 
 # Determine whether /X is sparse (group with data/indices/indptr) or dense
 x_subkeys <- tryCatch(
@@ -857,7 +859,7 @@ top_marker_per_type <- sapply(names(cell_counts), function(ct) {
 data.frame(
   CellType  = names(cell_counts),
   N_beads   = as.integer(cell_counts),
-  Pct       = round(100 * prop.table(cell_counts), 1),
+  Pct       = round(100 * as.numeric(prop.table(cell_counts)), 1),  # as.numeric: a table would expand into 2 columns
   TopMarker = top_marker_per_type
 ) |>
   arrange(desc(N_beads)) |>
