@@ -1,8 +1,8 @@
 name: pages
 # Publishes a small static site: pages/index.html plus the knitted ovary tutorial,
-# an example pipeboard report and a few images. Skipped while the repo is private
-# (GitHub Pages needs a public repo on a free plan). After making the repo public,
-# enable it once: Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
+# an example pipeboard report and a few images. Enable once in the repo:
+# Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
+# Until Pages is enabled, the job skips with a notice instead of failing.
 on:
   push:
     branches: [main]
@@ -19,14 +19,26 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Is GitHub Pages enabled?
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" --silent 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub Pages is not enabled. Settings -> Pages -> Source: GitHub Actions, then re-run this workflow."
+          fi
       - uses: actions/checkout@v4
+        if: steps.pages.outputs.enabled == 'true'
       - name: Assemble site
+        if: steps.pages.outputs.enabled == 'true'
         run: |
           mkdir -p _site
           cp pages/index.html                                   _site/index.html
@@ -37,8 +49,11 @@ jobs:
           cp healpipe/docs/screenshots/investigation.gif        _site/healpipe-investigation.gif
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
+        if: steps.pages.outputs.enabled == 'true'
       - uses: actions/upload-pages-artifact@v3
+        if: steps.pages.outputs.enabled == 'true'
         with:
           path: _site
       - id: deployment
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/deploy-pages@v4
