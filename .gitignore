@@ -8,3 +8,4 @@ __pycache__/
 .pytest_cache/
 *.h5ad
 *.h5ad.gz
+.DS_Store
