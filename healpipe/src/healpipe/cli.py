@@ -63,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
         sp.add_argument("--effort", default="medium", choices=["low", "medium", "high", "xhigh", "max"])
         if name != "poll":
             sp.add_argument("--data", default="data/pbmc3k_counts.h5ad")
+            sp.add_argument("--no-fetch", action="store_true", help="don't download the dataset if it is missing")
         if name != "eval":
             sp.add_argument("--dry-run", action="store_true", help="shadow mode: writes become would_apply, no relaunch")
         if name == "run":
@@ -93,6 +94,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     data = Path(args.data)
+    if not data.exists() and not args.no_fetch:
+        print(f"{data} not found; downloading public PBMC3k (one time)...")
+        try:
+            from .data import fetch
+
+            fetch(data)
+        except Exception as e:
+            print(f"download failed ({type(e).__name__}: {e})", file=sys.stderr)
     if not data.exists():
         print(f"{data} not found. Run: python scripts/fetch_data.py", file=sys.stderr)
         return 2

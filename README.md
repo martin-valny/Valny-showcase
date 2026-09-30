@@ -15,8 +15,8 @@ Three small, self-contained projects built on public single-cell and spatial dat
 ## Quick start
 
 ```bash
-cd healpipe  && pip install -e ".[dev]" && pytest -q && python scripts/fetch_data.py && healpipe eval
-cd pipeboard && pip install -e ".[dev]" && pytest -q && python scripts/fetch_data.py && pipeboard
+cd healpipe  && pip install -e ".[dev]" && pytest -q && healpipe eval      # downloads the data on first run
+cd pipeboard && pip install -e ".[dev]" && pytest -q && pipeboard          # downloads the data on first start
 cd ovary-spatial-tutorial && pip install -r scripts/requirements.txt && python scripts/fetch_data.py \
   && Rscript -e 'rmarkdown::render("ovary_analysis.Rmd")'   # optional and heavy; reading the notebook is enough
 ```

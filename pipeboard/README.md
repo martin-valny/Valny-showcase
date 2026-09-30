@@ -27,12 +27,11 @@ flowchart LR
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python scripts/fetch_data.py      # public PBMC3k -> data/pbmc3k_counts.h5ad (~6 MB)
-pipeboard                         # http://127.0.0.1:8080 (localhost only; --port / --host to change)
+pipeboard                         # http://127.0.0.1:8080; first start downloads public PBMC3k into data/
 pytest -q                         # offline: tiny synthetic fixture, no download
 ```
 
-Without the data file, the Run tab says to run `scripts/fetch_data.py` and disables submit.
+On first start, `pipeboard` downloads the public dataset into `data/` automatically (one time, a few seconds). To do it by hand, run `python scripts/fetch_data.py`; to skip it, use `pipeboard --no-fetch`. If the file is missing, the Run tab says how to get it and disables submit.
 
 **Try a failure:** set `min_genes` to 5000. QC removes every cell, and the job fails with
 `QC removed all 2638 cells (min_genes=5000: 0 pass; max_mito_pct=20.0: 2638 pass)`.
@@ -90,7 +89,7 @@ Stills from the same kind of run:
 
 ## Data
 
-10x Genomics PBMC3k, taken from the example dataset in CZI's cellxgene repository (URL in `scripts/fetch_data.py`). The script rebuilds exact integer counts from the normalized `.raw` layer and checks them against the published per-cell totals. No data is committed.
+10x Genomics PBMC3k, taken from the example dataset in CZI's cellxgene repository (URL in `src/pipeboard/data.py`). The script rebuilds exact integer counts from the normalized `.raw` layer and checks them against the published per-cell totals. No data is committed.
 
 ## Disclaimer
 

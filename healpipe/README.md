@@ -86,7 +86,7 @@ write through them. The same holds in reverse. Tests cover both directions.
 pip install -e ".[dev]"
 pytest -q                                   # offline: synthetic data, rules planner, mocked Claude API
 
-python scripts/fetch_data.py                # ~25 MB public PBMC3k -> data/pbmc3k_counts.h5ad
+# the first run/eval downloads public PBMC3k into data/ (or: python scripts/fetch_data.py)
 healpipe eval                               # submit every scenario, one sentinel poll, scorecard
 healpipe run --scenario species_mislabel    # one job: runner -> sentinel -> trace
 healpipe run --scenario species_mislabel --dry-run   # shadow mode: would_apply, nothing written
