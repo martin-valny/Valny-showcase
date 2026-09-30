@@ -31,6 +31,12 @@ def test_invalid_params_are_422(project):
     assert r.status_code == 422 and "below the minimum" in r.json()["detail"]
 
 
+def test_unknown_sample_col_is_422(project):
+    r = TestClient(create_app(project)).post("/api/jobs", json={"params": TINY_PARAMS, "sample_col": "../../etc"})
+    assert r.status_code == 422 and "not one of ['batch']" in r.json()["detail"]
+    assert not list((project / "runs").glob("*"))  # rejected before any job dir is made
+
+
 def test_job_lifecycle_over_http(project, slow_command):
     c = TestClient(create_app(project, command=slow_command))
     r = c.post("/api/jobs", json={"params": TINY_PARAMS, "sample_col": None})

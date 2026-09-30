@@ -2,7 +2,7 @@
 
 > Independent samples on public data. They contain no employer code, data or internal details. Employer work is confidential.
 
-**Browse it without cloning:** [https://martin-valny.github.io/valny-showcase/](https://martin-valny.github.io/valny-showcase/). It includes the knitted tutorial and an example pipeboard report, readable in the browser.
+**Browse it without cloning:** [https://martin-valny.github.io/Valny-showcase/](https://martin-valny.github.io/Valny-showcase/). It includes the knitted tutorial and an example pipeboard report, readable in the browser.
 
 Three small, self-contained projects built on public single-cell and spatial data. Two are in Python and use 10x PBMC3k. The third is an R tutorial on a published mouse ovary spatial sample. Each has its own README and runs its checks offline in CI.
 
@@ -27,7 +27,7 @@ Three small, self-contained projects built on public single-cell and spatial dat
 You need Python 3.10+. The tutorial also needs R. The Python projects download the public dataset themselves on first use. No API key is needed anywhere.
 
 ```bash
-git clone https://github.com/martin-valny/valny-showcase && cd valny-showcase
+git clone https://github.com/martin-valny/Valny-showcase && cd Valny-showcase
 ```
 
 **healpipe: agent pattern**
@@ -55,7 +55,7 @@ In the browser, run the default parameters and watch the log. Then open the repo
 
 **ovary-spatial-tutorial: Seurat walkthrough**
 
-Reading [the knitted tutorial online](https://martin-valny.github.io/valny-showcase/ovary-tutorial.html) is enough ([source HTML](ovary-spatial-tutorial/docs/ovary_analysis.html)). To re-run it, follow [its README](ovary-spatial-tutorial/README.md#how-to-run). The notebook installs its own R packages.
+Reading [the knitted tutorial online](https://martin-valny.github.io/Valny-showcase/ovary-tutorial.html) is enough ([source HTML](ovary-spatial-tutorial/docs/ovary_analysis.html)). To re-run it, follow [its README](ovary-spatial-tutorial/README.md#how-to-run). The notebook installs its own R packages.
 
 CI (`.github/workflows/ci.yml`) runs on every push:
 - **healpipe** and **pipeboard**: the Python test suites, on synthetic fixtures, with no API keys.

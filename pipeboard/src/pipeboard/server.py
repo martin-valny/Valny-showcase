@@ -74,7 +74,12 @@ def create_app(root: Path | str = ".", command: list[str] | None = None) -> Fast
 
     @app.post("/api/jobs", status_code=201)
     def start(body: dict = Body(default_factory=dict)):
-        return _call(jobs.create, body.get("params") or {}, body.get("sample_col"))
+        sample_col = body.get("sample_col") or None
+        if sample_col is not None and data_path.exists():
+            eligible = [c["name"] for c in _sample_columns(data_path)[2]]
+            if sample_col not in eligible:
+                raise HTTPException(422, f"sample_col {sample_col!r} is not one of {eligible}")
+        return _call(jobs.create, body.get("params") or {}, sample_col)
 
     @app.get("/api/jobs")
     def list_jobs():

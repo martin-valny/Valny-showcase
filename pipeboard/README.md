@@ -52,7 +52,7 @@ Stills from the same kind of run:
 | **Failed run: readable reason** | **Report: UMAP by published cluster** |
 | ![Failed job](docs/screenshots/failed-job.png) | ![Report UMAP](docs/screenshots/report-umap.png) |
 
-An example report from a real PBMC3k run is in [`docs/example_report.html`](docs/example_report.html), also viewable online at [https://martin-valny.github.io/valny-showcase/pipeboard-example-report.html](https://martin-valny.github.io/valny-showcase/pipeboard-example-report.html).
+An example report from a real PBMC3k run is in [`docs/example_report.html`](docs/example_report.html), also viewable online at [https://martin-valny.github.io/Valny-showcase/pipeboard-example-report.html](https://martin-valny.github.io/Valny-showcase/pipeboard-example-report.html).
 
 ## Pipeline
 
@@ -70,7 +70,7 @@ An example report from a real PBMC3k run is in [`docs/example_report.html`](docs
 | GET | `/` | static UI |
 | GET | `/api/schema` | form spec (the YAML as JSON) |
 | GET | `/api/data/status` | whether the input exists, size, shape, eligible sample columns |
-| POST | `/api/jobs` | `{"params": {...}, "sample_col": null}`: validate and start (422 bad params, 409 no data) |
+| POST | `/api/jobs` | `{"params": {...}, "sample_col": null}`: validate and start (422 bad params or unknown sample_col, 409 no data) |
 | GET | `/api/jobs` | list |
 | GET | `/api/jobs/{id}` | status |
 | GET | `/api/jobs/{id}/logs?offset=N` | log bytes from offset N: `{text, offset, done}` |

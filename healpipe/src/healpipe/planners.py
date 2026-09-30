@@ -85,6 +85,9 @@ class ClaudePlanner:
         import anthropic
 
         self.client = anthropic.Anthropic()
+        # the SDK only fails on the first request; fail here instead so the CLI can say what's missing
+        if not any(getattr(self.client, a, None) for a in ("api_key", "auth_token", "credentials")):
+            raise TypeError("no API key, auth token or credentials found")
         self.model, self.effort, self.max_turns = model, effort, max_turns
         self.record_dir = record_dir  # if set, save each investigation as a replayable recording
 

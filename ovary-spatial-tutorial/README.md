@@ -55,7 +55,7 @@ Rscript -e 'rmarkdown::render("ovary_analysis.Rmd")'
 
 **A note on cluster labels.** The `cluster_annotation` map in the Cell typing section is an example for this sample, written after looking at the marker plots. Cluster numbers can change with software versions even though the seed is fixed. Check the DotPlot and update the map if yours differ.
 
-**Knitted output:** [`docs/ovary_analysis.html`](docs/ovary_analysis.html) (~16 MB, self-contained) is the notebook run end to end on GSM7689281 with R 4.6 and Seurat v5: 77,202 beads, 15,135 after QC, 9 clusters. Read it online at [https://martin-valny.github.io/valny-showcase/ovary-tutorial.html](https://martin-valny.github.io/valny-showcase/ovary-tutorial.html), or download it and open it locally. Every R chunk is also parse-checked in CI.
+**Knitted output:** [`docs/ovary_analysis.html`](docs/ovary_analysis.html) (~16 MB, self-contained) is the notebook run end to end on GSM7689281 with R 4.6 and Seurat v5: 77,202 beads, 15,135 after QC, 9 clusters. Read it online at [https://martin-valny.github.io/Valny-showcase/ovary-tutorial.html](https://martin-valny.github.io/Valny-showcase/ovary-tutorial.html), or download it and open it locally. Every R chunk is also parse-checked in CI.
 
 ## Disclaimer
 
