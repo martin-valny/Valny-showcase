@@ -2,6 +2,8 @@
 
 > Independent samples on public data. They are not derived from, and do not describe, any employer system. Employer work is confidential.
 
+**Browse it without cloning:** [https://martin-valny.github.io/valny-showcase/](https://martin-valny.github.io/valny-showcase/). It includes the knitted tutorial and an example pipeboard report, readable in the browser.
+
 Three small, self-contained projects built on public single-cell and spatial data. Two are in Python and use 10x PBMC3k. The third is an R tutorial on a published mouse ovary spatial sample. Each has its own README and runs its checks offline in CI.
 
 | Project | What it shows | Start here |
@@ -10,7 +12,9 @@ Three small, self-contained projects built on public single-cell and spatial dat
 | [**pipeboard**](pipeboard/) | **A small internal tool.** A form generated from a YAML schema, background jobs as subprocesses, live log streaming with cancel, and a self-contained HTML report. No agent. | [README](pipeboard/README.md) |
 | [**ovary-spatial-tutorial**](ovary-spatial-tutorial/) | **An educational Seurat walkthrough** of one published mouse ovary Curio Seeker 3×3 sample (Mantri *et al.*, PNAS 2024; GEO GSE240271): QC → clustering → marker annotation → spatial maps → co-localization → Wilcoxon DE, with "Check your understanding" questions. R Markdown. | [README](ovary-spatial-tutorial/README.md) · [notebook](ovary-spatial-tutorial/ovary_analysis.Rmd) · [knitted HTML](ovary-spatial-tutorial/docs/ovary_analysis.html) |
 
-![pipeboard report UMAP](pipeboard/docs/screenshots/report-umap.png)
+| healpipe: Claude investigating failed jobs | pipeboard: report UMAP |
+|---|---|
+| ![healpipe investigation](healpipe/docs/screenshots/investigation.gif) | ![pipeboard report UMAP](pipeboard/docs/screenshots/report-umap.png) |
 
 ## Try it: a 10-minute reviewer tour
 

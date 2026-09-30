@@ -50,6 +50,8 @@ Stills from the same kind of run:
 | **Failed run: readable reason** | **Report: UMAP by published cluster** |
 | ![Failed job](docs/screenshots/failed-job.png) | ![Report UMAP](docs/screenshots/report-umap.png) |
 
+An example report from a real PBMC3k run is in [`docs/example_report.html`](docs/example_report.html), also viewable online at [https://martin-valny.github.io/valny-showcase/pipeboard-example-report.html](https://martin-valny.github.io/valny-showcase/pipeboard-example-report.html).
+
 ## Pipeline
 
 `src/pipeboard/pipeline.py` is intentionally tiny:

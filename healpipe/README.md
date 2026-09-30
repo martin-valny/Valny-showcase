@@ -14,6 +14,10 @@ runner: job fails  ->  sentinel polls  ->  investigate (job-type toolkit)  ->  s
 
 The data is public (10x PBMC3k). Every failure is injected on purpose and is reproducible.
 
+![Claude investigating two failed jobs: a recovery and a required escalation](docs/screenshots/investigation.gif)
+
+*Claude's recorded decisions re-executed through the real tools, with no API key needed (`healpipe eval --planner replay`). The first job is recovered with a config patch and a relaunch. The second is escalated, because the only "fix" would be loosening QC. Each step shows Claude's own stated hypothesis.*
+
 ## Architecture
 
 ```mermaid

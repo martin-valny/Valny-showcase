@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Valny Showcase</title>
+  <meta name="description" content="Three small projects on public single-cell and spatial data: an on-call agent pattern, an internal-tool UI, and a Seurat tutorial.">
+  <style>
+    :root {
+      --bg: #f6f7f9; --panel: #ffffff; --text: #1d232b; --muted: #5b6573; --line: #e1e5ea;
+      --accent: #2f6db3; --chip: #e5eefa; --chip-text: #1f4f86;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14171b; --panel: #1c2026; --text: #e4e7eb; --muted: #9aa4b1; --line: #2c323a;
+        --accent: #6ea8ec; --chip: #1b2d45; --chip-text: #9cc3f2;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 1040px; margin: 0 auto; padding: 40px 16px 64px; }
+    h1 { font-size: 30px; margin: 0 0 6px; }
+    .lede { color: var(--muted); margin: 0 0 8px; max-width: 760px; }
+    .note { color: var(--muted); font-size: 14px; margin: 0 0 32px; }
+    .cards { display: grid; gap: 20px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: grid; grid-template-columns: 1.15fr 1fr; }
+    .card img { width: 100%; height: 100%; object-fit: cover; object-position: top left; display: block; background: #0f1216; min-height: 240px; }
+    .card img.contain { object-fit: contain; object-position: center; }
+    .body { padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip { background: var(--chip); color: var(--chip-text); border-radius: 999px; padding: 2px 10px; font-size: 12.5px; font-weight: 600; }
+    h2 { font-size: 21px; margin: 0; }
+    .body p { margin: 0; }
+    ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 15px; }
+    .links { margin-top: auto; display: flex; gap: 14px; flex-wrap: wrap; padding-top: 6px; }
+    .links a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+    footer { color: var(--muted); font-size: 14px; margin-top: 36px; border-top: 1px solid var(--line); padding-top: 16px; }
+    @media (max-width: 760px) { .card { grid-template-columns: 1fr; } .card img { min-height: 0; max-height: 320px; } h1 { font-size: 25px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Valny Showcase</h1>
+  <p class="lede">Three small, self-contained projects on public single-cell and spatial transcriptomics data: an agent that investigates failed pipeline jobs, a small internal tool, and a Seurat tutorial.</p>
+  <p class="note">Independent samples on public data. Not derived from, and not describing, any employer system. Employer work is confidential.</p>
+
+  <div class="cards">
+    <article class="card">
+      <img class="contain" src="healpipe-investigation.gif" alt="Terminal recording of Claude investigating two failed jobs: one recovered by a config patch, one escalated to a human">
+      <div class="body">
+        <div class="chips"><span class="chip">Python</span><span class="chip">LLM agent</span><span class="chip">Claude</span></div>
+        <h2>healpipe: an on-call agent pattern</h2>
+        <p>A runner executes jobs. A sentinel polls failed jobs, investigates them with tools specific to each job type, and then makes a gated, dry-runnable config write and relaunches, or escalates.</p>
+        <ul>
+          <li>Guardrails live in code: no QC-threshold edits, no blind retries, capped relaunches</li>
+          <li>Claude scores 7/7, the same as a rules baseline; escalation counts as a success state</li>
+          <li>The recorded Claude run replays in CI with no API key</li>
+        </ul>
+        <div class="links">
+          <a href="https://github.com/martin-valny/valny-showcase/tree/main/healpipe">README &amp; code</a>
+          <a href="https://github.com/martin-valny/valny-showcase/blob/main/healpipe/docs/WALKTHROUGH.md">Walkthrough</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <img src="pipeboard-run-form.png" alt="pipeboard Run tab: a form generated from a YAML schema">
+      <div class="body">
+        <div class="chips"><span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">vanilla JS</span></div>
+        <h2>pipeboard: a small internal tool</h2>
+        <p>A form generated from a YAML schema, background jobs as subprocesses, live log streaming with cancel, and a self-contained HTML report. No agent.</p>
+        <ul>
+          <li>Change the YAML and the form changes, with no JavaScript edits</li>
+          <li>A QC setting that removes every cell gives a readable failed job, not a crash</li>
+        </ul>
+        <div class="links">
+          <a href="pipeboard-example-report.html">Example report</a>
+          <a href="https://github.com/martin-valny/valny-showcase/tree/main/pipeboard">README &amp; code</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <img src="ovary-spatial-clusters.png" alt="Spatial map of clusters across a mouse ovary section">
+      <div class="body">
+        <div class="chips"><span class="chip">R</span><span class="chip">Seurat</span><span class="chip">spatial</span></div>
+        <h2>ovary-spatial-tutorial: a Seurat walkthrough</h2>
+        <p>An educational notebook on one published mouse ovary Curio Seeker 3×3 sample (Mantri <em>et al.</em>, PNAS 2024; GEO GSE240271): QC, clustering, marker annotation, spatial maps, co-localization and Wilcoxon DE, with "Check your understanding" questions.</p>
+        <div class="links">
+          <a href="ovary-tutorial.html">Read the knitted tutorial</a>
+          <a href="https://github.com/martin-valny/valny-showcase/tree/main/ovary-spatial-tutorial">README &amp; notebook</a>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <footer>
+    Data: 10x Genomics PBMC3k (via CZI cellxgene's example dataset) and Mantri M, Zhang HH, Spanos E, Ren YA, De Vlaminck I., <em>PNAS</em> 121(5):e2317418121 (2024).
+    · <a href="https://github.com/martin-valny/valny-showcase" style="color:var(--accent)">Repository</a>
+  </footer>
+</main>
+</body>
+</html>

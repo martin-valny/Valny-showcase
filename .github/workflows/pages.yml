@@ -1,0 +1,44 @@
+name: pages
+# Publishes a small static site: pages/index.html plus the knitted ovary tutorial,
+# an example pipeboard report and a few images. Skipped while the repo is private
+# (GitHub Pages needs a public repo on a free plan). After making the repo public,
+# enable it once: Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp pages/index.html                                   _site/index.html
+          cp ovary-spatial-tutorial/docs/ovary_analysis.html    _site/ovary-tutorial.html
+          cp ovary-spatial-tutorial/docs/spatial-clusters.png   _site/ovary-spatial-clusters.png
+          cp pipeboard/docs/example_report.html                 _site/pipeboard-example-report.html
+          cp pipeboard/docs/screenshots/run-form.png            _site/pipeboard-run-form.png
+          cp healpipe/docs/screenshots/investigation.gif        _site/healpipe-investigation.gif
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
