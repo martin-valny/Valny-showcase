@@ -37,8 +37,9 @@ Each section ends with a short **Check your understanding** question on the biol
 To knit it locally:
 
 ```bash
-# 1. R packages: run the `install-packages` chunk at the top of ovary_analysis.Rmd once
-#    (Seurat, ggplot2, patchwork, dplyr, Matrix, knitr, rmarkdown + Bioconductor rhdf5)
+# 1. R packages: nothing to do by hand. The first chunk of ovary_analysis.Rmd installs
+#    whatever is missing (Seurat etc. from CRAN, rhdf5 from Bioconductor) when you knit.
+#    Only rmarkdown is needed to start the knit:  Rscript -e 'install.packages("rmarkdown", repos="https://cloud.r-project.org")'
 
 # 2. Data: download the GEO sample and convert it to data/sample.h5ad
 pip install -r scripts/requirements.txt

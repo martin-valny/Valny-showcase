@@ -31,20 +31,38 @@ This notebook is for students and analysts who are new to spatial transcriptomic
 
 ## Package Installation
 
-Run this block once to install all required packages before knitting.
+This chunk runs automatically when you knit. It installs only the packages that are missing, so after the first run it takes a second. Seurat and the plotting packages come from CRAN. `rhdf5` (the HDF5 reader) comes from Bioconductor and must match your R version, so it is installed through `BiocManager`.
 
-```{r install-packages, eval=FALSE}
-# ── Run once to install dependencies ─────────────────────────────────────────
-install.packages(c(
-  "Seurat", "SeuratObject",
-  "ggplot2", "patchwork", "dplyr",
-  "Matrix", "knitr", "rmarkdown"
-))
+```{r install-packages}
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-# rhdf5 — Bioconductor HDF5 reader (avoids hdf5r compilation issues)
-if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-BiocManager::install("rhdf5")
+cran_pkgs <- c("Seurat", "SeuratObject", "ggplot2", "patchwork", "dplyr",
+               "Matrix", "scales", "knitr", "rmarkdown", "BiocManager")
+missing_cran <- cran_pkgs[!vapply(cran_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+if (length(missing_cran) > 0) {
+  message("Installing from CRAN: ", paste(missing_cran, collapse = ", "))
+  install.packages(missing_cran)
+}
+
+if (!requireNamespace("rhdf5", quietly = TRUE)) {
+  message("Installing rhdf5 from Bioconductor (release matching R ", getRversion(), ")")
+  # update = FALSE / ask = FALSE: don't touch or prompt about other installed packages.
+  BiocManager::install("rhdf5", update = FALSE, ask = FALSE)
+}
+
+# Fail early with a clear message instead of halfway through the analysis.
+still_missing <- c(cran_pkgs, "rhdf5")[!vapply(c(cran_pkgs, "rhdf5"), requireNamespace, logical(1), quietly = TRUE)]
+if (length(still_missing) > 0) {
+  stop("Could not install: ", paste(still_missing, collapse = ", "),
+       ". See the notes below this chunk.", call. = FALSE)
+}
 ```
+
+If `rhdf5` fails to install:
+
+- **Check your R version** with `R.version.string`. Bioconductor builds each release for one R version, so a very old or brand-new R can have no matching binary. Updating R to the current release usually fixes this.
+- **Check the Bioconductor setup** with `BiocManager::valid()`. It reports version mismatches and how to fix them.
+- **macOS:** if R tries to compile from source, install the command-line tools once with `xcode-select --install` in a terminal, then retry.
 
 ```{r libraries}
 library(Seurat)
@@ -52,7 +70,7 @@ library(ggplot2)
 library(patchwork)
 library(dplyr)
 library(Matrix)
-library(rhdf5)   # Bioconductor HDF5 reader; install via BiocManager::install("rhdf5")
+library(rhdf5)   # Bioconductor HDF5 reader (installed above via BiocManager)
 
 set.seed(42)
 ```
