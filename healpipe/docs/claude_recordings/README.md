@@ -1,6 +1,6 @@
 # Claude recordings
 
-This folder is for recordings of real Claude investigations, one JSON file per scenario. To create them (needs an Anthropic API key once):
+Recordings of a real Claude investigation run (`claude-opus-5-5`, effort `medium`, 7/7 correct), one JSON file per scenario. To re-create them (needs an Anthropic API key):
 
 ```bash
 python scripts/fetch_data.py

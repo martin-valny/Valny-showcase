@@ -110,6 +110,19 @@ Scorecard with the rules planner on PBMC3k ([docs/eval_rules.md](docs/eval_rules
 | job-0006 | shallow_sequencing | annotate | escalated | escalated | yes | - | 3 | - |
 | job-0007 | negative_values | ingest | escalated | escalated | yes | - | 3 | - |
 
+**Live Claude run** (`claude-opus-5-5`, effort `medium`; full scorecard in [docs/eval_claude.md](docs/eval_claude.md)): **7/7 correct**, with the same fixes and the same two escalations as the rules baseline.
+
+| scenario | expected | rules | Claude | Claude tool calls |
+|---|---|---|---|---|
+| prenormalized_input | fixed | fixed (`input_scale=log1p`) | fixed (`input_scale=log1p`) | 5 |
+| transposed_matrix | fixed | fixed (`orientation=genes_x_cells`) | fixed (`orientation=genes_x_cells`) | 5 |
+| transposed_prenormalized | fixed | fixed (2 writes, 1 relaunch) | fixed (2 writes, 1 relaunch) | 6 |
+| species_mislabel | fixed | fixed (`species=human`) | fixed (`species=human`) | 6 |
+| shallow_sequencing | escalated | escalated | escalated | 4 |
+| negative_values | escalated | escalated | escalated | 3 |
+
+Claude's own reasoning is in the traces. In [shallow_sequencing](docs/claude_traces/shallow_sequencing.claude.trace.md), Claude first rules out a species mismatch, then checks depth (median 73 genes/cell vs. the fixed floor of 200), and escalates with those numbers instead of looking for a threshold to loosen. [species_mislabel](docs/claude_traces/species_mislabel.claude.trace.md) shows a recovery. No API key is needed to re-run it: `healpipe eval --planner replay` re-executes these exact decisions, and CI does so on every push.
+
 After the scorecard, the eval runs a second poll, which investigates 0 jobs.
 "Label agreement" compares the annotation with the dataset's published labels,
 which the sentinel never sees. A recovered job produces the same biology as the
@@ -166,7 +179,7 @@ deterministically, so CI runs offline and the LLM has a baseline to beat.
 
 If a live result disagrees with what was recorded (a call that succeeded now fails, or a relaunch ends in a different status), the replay stops at that call. It's graded as a **stale recording**, so a recording can't quietly pass after the code changes. Thinking blocks are not stored.
 
-Recordings live in [`docs/claude_recordings/`](docs/claude_recordings/) once a live run has been made. Until then, `--planner replay` says how to create them.
+The recordings from the live run above are in [`docs/claude_recordings/`](docs/claude_recordings/). To re-record after changing prompts or tools, run `healpipe eval --planner claude --record docs/claude_recordings`.
 
 ## Data
 

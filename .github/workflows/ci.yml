@@ -19,6 +19,22 @@ jobs:
       # Offline: synthetic fixtures only. No dataset download, no API keys.
       - run: pytest -q
 
+  healpipe-replay:
+    # Re-executes the recorded Claude run on the real public dataset. No API key.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: healpipe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: python scripts/fetch_data.py
+      - name: Replay recorded Claude decisions (fails on a stale recording)
+        run: healpipe eval --planner replay
+
   ovary-spatial-tutorial:
     runs-on: ubuntu-latest
     defaults:
