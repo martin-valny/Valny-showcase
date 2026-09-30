@@ -49,7 +49,7 @@ In the browser, run the default parameters and watch the log. Then open the repo
 
 **ovary-spatial-tutorial: Seurat walkthrough**
 
-Reading [the knitted HTML](ovary-spatial-tutorial/docs/ovary_analysis.html) (download it, then open it) is enough. To re-run it, follow [its README](ovary-spatial-tutorial/README.md#how-to-run). The notebook installs its own R packages.
+Reading [the knitted tutorial online](https://martin-valny.github.io/valny-showcase/ovary-tutorial.html) is enough ([source HTML](ovary-spatial-tutorial/docs/ovary_analysis.html)). To re-run it, follow [its README](ovary-spatial-tutorial/README.md#how-to-run). The notebook installs its own R packages.
 
 CI (`.github/workflows/ci.yml`) runs on every push:
 - **healpipe** and **pipeboard**: the Python test suites, on synthetic fixtures, with no API keys.
