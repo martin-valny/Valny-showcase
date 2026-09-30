@@ -1,6 +1,6 @@
 # valny-showcase
 
-> Independent samples on public data. They are not derived from, and do not describe, any employer system. Employer work is confidential.
+> Independent samples on public data. They contain no employer code, data or internal details. Employer work is confidential.
 
 **Browse it without cloning:** [https://martin-valny.github.io/valny-showcase/](https://martin-valny.github.io/valny-showcase/). It includes the knitted tutorial and an example pipeboard report, readable in the browser.
 
@@ -11,6 +11,12 @@ Three small, self-contained projects built on public single-cell and spatial dat
 | [**healpipe**](healpipe/) | **An on-call agent pattern.** A runner executes jobs. A sentinel polls failed jobs, investigates with tools specific to each job type, then makes a gated, dry-runnable config write and relaunches, or escalates. It has an LLM planner (Claude) and a rules baseline. | [README](healpipe/README.md) · [walkthrough](healpipe/docs/WALKTHROUGH.md) |
 | [**pipeboard**](pipeboard/) | **A small internal tool.** A form generated from a YAML schema, background jobs as subprocesses, live log streaming with cancel, and a self-contained HTML report. No agent. | [README](pipeboard/README.md) |
 | [**ovary-spatial-tutorial**](ovary-spatial-tutorial/) | **An educational Seurat walkthrough** of one published mouse ovary Curio Seeker 3×3 sample (Mantri *et al.*, PNAS 2024; GEO GSE240271): QC → clustering → marker annotation → spatial maps → co-localization → Wilcoxon DE, with "Check your understanding" questions. R Markdown. | [README](ovary-spatial-tutorial/README.md) · [notebook](ovary-spatial-tutorial/ovary_analysis.Rmd) · [knitted HTML](ovary-spatial-tutorial/docs/ovary_analysis.html) |
+
+## Background: how these relate to my work
+
+- **healpipe.** I built an on-call agent that watches failed production pipeline jobs, investigates them with an allow-listed tool loop, and either files a gated fix or escalates. This demo is that pattern on public data (runner + sentinel, per-job tools, dry-run, escalation as a success state), not the production system.
+- **pipeboard.** I shipped a browser UI so people could configure and run a batch-correction pipeline (schema-driven form, background jobs, logs, reports) without the CLI. This demo is that product shape on PBMC3k: YAML → form → job → log → HTML report, not that internal tool.
+- **ovary-spatial-tutorial.** This one is not an analog of a product I built. It is teaching material: how I walk through a published spatial dataset (QC → annotation → spatial structure → DE). It shows analysis and communication, not what I ran in production.
 
 | healpipe: Claude investigating failed jobs | pipeboard: report UMAP |
 |---|---|

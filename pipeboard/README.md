@@ -2,6 +2,8 @@
 
 > Independent sample on public data illustrating a small internal tool (UI + background jobs). Not derived from any employer system; employer work is confidential.
 
+**Background.** I shipped a browser UI so people could configure and run a batch-correction pipeline (schema-driven form, background jobs, logs, reports) without the CLI. This demo is that product shape on PBMC3k: YAML → form → job → log → HTML report, not that internal tool.
+
 pipeboard is a local web tool for running a small single-cell RNA-seq pipeline on public 10x PBMC3k data. It has a form generated from a YAML schema, background jobs with live logs and cancel, and a self-contained HTML report.
 
 ```mermaid
@@ -95,4 +97,4 @@ An example report from a real PBMC3k run is in [`docs/example_report.html`](docs
 
 ## Disclaimer
 
-**This is an independent sample built on public data to illustrate a small internal tool (UI + background jobs).** It is not derived from, and does not describe, any employer system. Employer work is confidential.
+**This is an independent sample built on public data to illustrate a small internal tool (UI + background jobs).** It is not derived from any employer system and contains no employer code, data or internal details. Employer work is confidential.

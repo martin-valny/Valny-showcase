@@ -2,6 +2,8 @@
 
 An educational R Markdown notebook that walks through a complete Seurat analysis of **one published mouse ovary section** profiled with Curio Seeker 3×3 spatial transcriptomics.
 
+**Background.** This one is not an analog of a product I built. It is teaching material: how I walk through a published spatial dataset (QC → annotation → spatial structure → DE). It shows analysis and communication, not what I ran in production.
+
 ## Data and citation
 
 The data come from:

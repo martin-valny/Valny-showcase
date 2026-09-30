@@ -2,6 +2,8 @@
 
 > Independent sample on public data illustrating an agent pattern. Not derived from any employer system; employer work is confidential.
 
+**Background.** I built an on-call agent that watches failed production pipeline jobs, investigates them with an allow-listed tool loop, and either files a gated fix or escalates. This demo is that pattern on public data (runner + sentinel, per-job tools, dry-run, escalation as a success state), not the production system.
+
 A sentinel agent that watches a batch runner. When a single-cell RNA-seq job
 fails, the sentinel investigates it with tools specific to that job's type.
 Then it either makes a **gated, dry-runnable config write** and asks the runner
@@ -200,5 +202,5 @@ published values.
 ## Disclaimer
 
 **This is an independent sample built on public data to illustrate an agent
-pattern.** It is not derived from, and does not describe, any employer system.
-Employer work is confidential.
+pattern.** It is not derived from any employer system and contains no employer code,
+data or internal details. Employer work is confidential.
