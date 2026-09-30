@@ -12,22 +12,49 @@ Three small, self-contained projects built on public single-cell and spatial dat
 
 ![pipeboard report UMAP](pipeboard/docs/screenshots/report-umap.png)
 
-## Quick start
+## Try it: a 10-minute reviewer tour
+
+You need Python 3.10+. The tutorial also needs R. The Python projects download the public dataset themselves on first use. No API key is needed anywhere.
 
 ```bash
-cd healpipe  && pip install -e ".[dev]" && pytest -q && healpipe eval      # downloads the data on first run
-cd pipeboard && pip install -e ".[dev]" && pytest -q && pipeboard          # downloads the data on first start
-cd ovary-spatial-tutorial && pip install -r scripts/requirements.txt && python scripts/fetch_data.py \
-  && Rscript -e 'rmarkdown::render("ovary_analysis.Rmd")'   # optional and heavy; reading the notebook is enough
+git clone https://github.com/martin-valny/valny-showcase && cd valny-showcase
 ```
 
+**healpipe: agent pattern**
+```bash
+cd healpipe
+python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
+pytest -q                                                    # 45 passed (offline)
+healpipe eval                                                # rules planner: 7/7 correct
+healpipe eval --planner replay                               # Claude's recorded run, re-executed: 7/7 correct
+healpipe run --scenario species_mislabel --planner replay    # one investigation, step by step
+healpipe run --scenario shallow_sequencing --planner replay  # a required escalation
+healpipe run --scenario species_mislabel --dry-run           # shadow mode: proposes, writes nothing
+deactivate && cd ..
+```
+
+**pipeboard: internal tool UI**
+```bash
+cd pipeboard
+python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
+pytest -q                                                    # offline
+pipeboard                                                    # open http://127.0.0.1:8080, Ctrl+C to stop
+deactivate && cd ..
+```
+In the browser, run the default parameters and watch the log. Then open the report, and try `min_genes = 5000` to see a readable failed job.
+
+**ovary-spatial-tutorial: Seurat walkthrough**
+
+Reading [the knitted HTML](ovary-spatial-tutorial/docs/ovary_analysis.html) (download it, then open it) is enough. To re-run it, follow [its README](ovary-spatial-tutorial/README.md#how-to-run). The notebook installs its own R packages.
+
 CI (`.github/workflows/ci.yml`) runs on every push:
-- **healpipe** and **pipeboard**: the Python test suites, on synthetic fixtures only, with no dataset download and no API keys.
-- **ovary-spatial-tutorial**: the repo hygiene checks, and a check that every R chunk parses.
+- **healpipe** and **pipeboard**: the Python test suites, on synthetic fixtures, with no API keys.
+- **healpipe-replay**: downloads the public data and re-executes the recorded Claude run. It fails if the recording no longer matches the code.
+- **ovary-spatial-tutorial**: repo hygiene checks, and a check that every R chunk parses.
 
 ## Data and credit
 
 - **PBMC3k:** 10x Genomics, via the example dataset in CZI's cellxgene repository.
 - **Mouse ovary:** Mantri M, Zhang HH, Spanos E, Ren YA, De Vlaminck I., *Proc Natl Acad Sci USA* 121(5):e2317418121 (2024). The tutorial is not affiliated with the paper's authors or their institutions beyond citing their work.
 
-No data files are committed. Each project has a fetch script.
+No data files are committed. healpipe and pipeboard download PBMC3k on first use; the tutorial fetches its GEO sample with `scripts/fetch_data.py`.

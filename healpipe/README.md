@@ -83,6 +83,7 @@ write through them. The same holds in reverse. Tests cover both directions.
 ## How to run
 
 ```bash
+python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest -q                                   # offline: synthetic data, rules planner, mocked Claude API
 
@@ -93,10 +94,14 @@ healpipe run --scenario species_mislabel --dry-run   # shadow mode: would_apply,
 healpipe jobs                               # what the runner's job store looks like
 healpipe poll                               # run the sentinel once over existing state
 
-export ANTHROPIC_API_KEY=...
-healpipe eval --planner claude --record docs/claude_recordings   # LLM planner; saves each run
 healpipe eval --planner replay              # re-run the recorded Claude decisions, no key needed
+
+# live Claude (needs an Anthropic API key): re-records docs/claude_recordings
+export ANTHROPIC_API_KEY=...
+healpipe eval --planner claude --record docs/claude_recordings
 ```
+
+Expected results: `pytest` shows 45 passed. `eval` with the rules or replay planner shows **7/7 correct**, and a second sentinel poll investigates 0 jobs. `run` prints the investigation trace. `--dry-run` ends in `PROPOSED`, and `healpipe jobs` still shows the job as failed with `attempts=0`.
 
 Scorecard with the rules planner on PBMC3k ([docs/eval_rules.md](docs/eval_rules.md)):
 
